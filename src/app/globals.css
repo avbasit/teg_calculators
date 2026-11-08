@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/*
+ * TEG brand tokens — taken from tegconsultancy.com and the TEG logo.
+ *   brand  #224085  logo navy (sampled from the logo artwork)
+ *   royal  #125FCD  site "secondary" — links, buttons, highlights
+ *   ink    #29313C  site "primary" — headings / dark surfaces
+ *   body   #2F2F2F  site body text
+ *   cream  #FFFAF5  site warm background accent
+ * Type: Open Sans (primary/body), Roboto (secondary/labels).
+ */
+@theme {
+  --color-brand: #224085;
+  --color-brand-deep: #172d63;
+  --color-brand-night: #0d1a3c;
+  --color-royal: #125fcd;
+  --color-royal-soft: #e9f1fd;
+  --color-ink: #29313c;
+  --color-body: #2f2f2f;
+  --color-muted: #64707f;
+  --color-line: #e3e8f0;
+  --color-canvas: #f6f8fb;
+  --color-cream: #fffaf5;
+
+  --font-sans: var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-roboto), var(--font-open-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(13 26 60 / 0.04), 0 8px 24px -12px rgb(13 26 60 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(13 26 60 / 0.05), 0 24px 48px -20px rgb(13 26 60 / 0.28);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fine grid used behind the hero */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  body {
+    background: #fff;
+  }
+}
