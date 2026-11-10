@@ -1,17 +1,29 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { Clock } from "lucide-react";
 import type { PaymentStage } from "@/lib/calculators/types";
-import { num, usd } from "@/lib/format";
+import { money, num, type Currency } from "@/lib/format";
 import { AnimatedNumber } from "./controls";
 
-export function StageCard({ stage, letter, index }: { stage: PaymentStage; letter: string; index: number }) {
+export function StageCard({
+  stage,
+  letter,
+  index,
+  currency,
+}: {
+  stage: PaymentStage;
+  letter: string;
+  index: number;
+  currency: Currency;
+}) {
   return (
     <motion.section
+      layout="position"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.08 }}
+      transition={{ delay: index * 0.06 }}
       className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-line"
     >
       <header className="flex items-center justify-between gap-4 border-b border-line bg-gradient-to-r from-royal-soft to-white px-5 py-4 sm:px-6">
@@ -45,15 +57,25 @@ export function StageCard({ stage, letter, index }: { stage: PaymentStage; lette
               <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 py-3 text-sm sm:grid-cols-[1fr_110px_56px_120px] sm:items-center">
                 <div>
                   <p className="font-semibold text-ink">{l.label}</p>
-                  {l.detail && <p className="text-xs text-muted">{l.detail}</p>}
+                  {(l.detail || l.timeline) && (
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
+                      {l.detail && <span>{l.detail}</span>}
+                      {l.timeline && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-royal-soft px-2 py-0.5 text-[11px] font-medium text-royal">
+                          <Clock className="size-3" />
+                          {l.timeline}
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
-                <span className="hidden text-right text-muted tabular sm:block">{usd(l.unit)}</span>
+                <span className="hidden text-right text-muted tabular sm:block">{money(l.unit, currency)}</span>
                 <span className="hidden text-center text-muted tabular sm:block">{num(l.qty)}</span>
                 <span className="text-right font-semibold text-ink tabular">
                   <span className="mr-2 text-xs font-normal text-muted sm:hidden">
-                    {usd(l.unit)} × {l.qty}
+                    {money(l.unit, currency)} × {l.qty}
                   </span>
-                  {usd(l.total)}
+                  {money(l.total, currency)}
                 </span>
               </div>
             </motion.li>
@@ -62,9 +84,11 @@ export function StageCard({ stage, letter, index }: { stage: PaymentStage; lette
       </motion.ul>
 
       <footer className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 sm:px-6">
-        <span className="font-display text-xs font-bold uppercase tracking-[0.14em] text-ink">{stage.subtotalLabel}</span>
+        <span className="font-display text-xs font-bold uppercase tracking-[0.14em] text-ink">
+          {stage.subtotalLabel} ({letter})
+        </span>
         <span className="text-lg font-bold text-brand">
-          <AnimatedNumber value={stage.subtotal} />
+          <AnimatedNumber value={stage.subtotal} currency={currency} />
         </span>
       </footer>
     </motion.section>

@@ -34,9 +34,10 @@ npm run build && npm start   # production mode
 
 ## Adding a country
 
-1. Write `src/lib/calculators/<country>.ts` returning a `Quote` (see `types.ts`), plus a test against its workbook.
-2. Build a page at `src/app/calculators/<slug>/page.tsx` (copy the SKN one as a starting point).
-3. Flip its entry in `registry.ts` to `status: "live"`.
+1. Write `src/lib/calculators/<country>.ts` returning a `Quote` (see `types.ts`; USD or EUR), plus a test that ports its workbook formulas literally.
+2. Write `src/components/calculator/<country>-calculator.tsx`: it renders `<CalculatorPage>` from `shell.tsx` and supplies only its own input cards (see `latvia-calculator.tsx` for a short example). The shell provides the client card, breakdown, summary, mobile total bar, copy and print.
+3. Add the route `src/app/calculators/<slug>/page.tsx`.
+4. In `registry.ts` set its entry to `status: "live"` (citizenship or residency section), and add a flag to `components/flags.tsx` if you like.
 
 ## Updating SKN rates
 

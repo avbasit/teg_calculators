@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- plain <img> keeps the print output simple */
-import type { Quote } from "@/lib/calculators/types";
+import { stageLetter, type Quote } from "@/lib/calculators/types";
 import { TEG } from "@/lib/brand";
-import { num, usd } from "@/lib/format";
+import { money, num } from "@/lib/format";
 
 /**
  * Client-facing quotation. Hidden on screen; this is what prints / saves to PDF.
@@ -15,6 +15,7 @@ export function QuoteDocument({
   family,
   quote,
   notes,
+  totalLabel,
 }: {
   title: string;
   programLabel: string;
@@ -24,8 +25,11 @@ export function QuoteDocument({
   family: { label: string; count: number }[];
   quote: Quote;
   notes: string[];
+  totalLabel: string;
 }) {
-  const letters = ["A", "B", "C", "D"];
+  const fmt = (n: number) => money(n, quote.currency);
+  const letters = quote.stages.map((_, i) => stageLetter(i));
+  const hasTimeline = quote.stages.some((s) => s.lines.some((l) => l.timeline));
   return (
     <article className="hidden text-[11px] leading-snug text-body print:block">
       <header className="flex items-start justify-between border-b-4 border-brand pb-4">
@@ -64,7 +68,7 @@ export function QuoteDocument({
       </section>
 
       {quote.stages.map((s, i) => (
-        <table key={s.id} className="mt-6 w-full border-collapse break-inside-avoid">
+        <table key={s.id} className="mt-5 w-full border-collapse break-inside-avoid">
           <thead>
             <tr className="bg-brand text-left text-white">
               <th className="px-2 py-1.5 font-bold uppercase" colSpan={2}>
@@ -73,6 +77,7 @@ export function QuoteDocument({
               <th className="px-2 py-1.5 text-right">Fee</th>
               <th className="px-2 py-1.5 text-center">×</th>
               <th className="px-2 py-1.5 text-right">Total</th>
+              {hasTimeline && <th className="px-2 py-1.5">Timeline</th>}
             </tr>
           </thead>
           <tbody>
@@ -80,24 +85,28 @@ export function QuoteDocument({
               <tr key={l.id} className="border-b border-line">
                 <td className="px-2 py-1.5 font-semibold">{l.label}</td>
                 <td className="px-2 py-1.5 text-muted">{l.detail}</td>
-                <td className="px-2 py-1.5 text-right tabular">{usd(l.unit)}</td>
+                <td className="px-2 py-1.5 text-right tabular">{fmt(l.unit)}</td>
                 <td className="px-2 py-1.5 text-center tabular">{num(l.qty)}</td>
-                <td className="px-2 py-1.5 text-right tabular">{usd(l.total)}</td>
+                <td className="px-2 py-1.5 text-right tabular">{fmt(l.total)}</td>
+                {hasTimeline && <td className="px-2 py-1.5 text-muted">{l.timeline}</td>}
               </tr>
             ))}
             <tr className="bg-royal-soft font-bold">
               <td className="px-2 py-1.5 uppercase" colSpan={4}>
-                {s.subtotalLabel}
+                {s.subtotalLabel} ({letters[i]})
               </td>
-              <td className="px-2 py-1.5 text-right tabular">{usd(s.subtotal)}</td>
+              <td className="px-2 py-1.5 text-right tabular">{fmt(s.subtotal)}</td>
+              {hasTimeline && <td />}
             </tr>
           </tbody>
         </table>
       ))}
 
       <div className="mt-4 flex items-center justify-between rounded bg-brand-night px-3 py-2.5 text-sm font-bold text-white">
-        <span className="uppercase">Total cost ({letters.slice(0, quote.stages.length).join(" + ")})</span>
-        <span className="tabular">{usd(quote.total)}</span>
+        <span className="uppercase">
+          {totalLabel} ({letters.join(" + ")})
+        </span>
+        <span className="tabular">{fmt(quote.total)}</span>
       </div>
 
       <section className="mt-6 break-inside-avoid">

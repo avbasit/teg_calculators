@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useSpring, useTransform } from "motion/react";
 import { Lock, Minus, Plus } from "lucide-react";
-import { num, usd } from "@/lib/format";
+import { CURRENCY_PREFIX, money, num, type Currency } from "@/lib/format";
 
-/** A number that springs smoothly to each new value. Counts up from 0 on first render. */
-export function AnimatedNumber({ value, currency = true }: { value: number; currency?: boolean }) {
+/**
+ * A number that springs smoothly to each new value. Counts up from 0 on first render.
+ * Pass `currency={null}` for a plain count.
+ */
+export function AnimatedNumber({ value, currency = "USD" }: { value: number; currency?: Currency | null }) {
   const spring = useSpring(0, { stiffness: 90, damping: 22, mass: 0.7 });
-  const text = useTransform(spring, (v) => (currency ? usd(Math.round(v)) : num(Math.round(v))));
+  const text = useTransform(spring, (v) => (currency ? money(Math.round(v), currency) : num(Math.round(v))));
   useEffect(() => {
     spring.set(value);
   }, [spring, value]);
@@ -145,18 +148,20 @@ export function MoneyInput({
   onChange,
   label,
   hint,
+  currency = "USD",
 }: {
   value: number;
   onChange: (v: number) => void;
   label: string;
   hint?: string;
+  currency?: Currency;
 }) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-ink">{label}</span>
       {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
       <span className="mt-2 flex h-11 items-center rounded-xl bg-white ring-1 ring-line transition focus-within:ring-2 focus-within:ring-royal/50">
-        <span className="pl-3.5 pr-1 text-sm font-semibold text-muted">US$</span>
+        <span className="pl-3.5 pr-1 text-sm font-semibold text-muted">{CURRENCY_PREFIX[currency]}</span>
         <input
           type="text"
           inputMode="numeric"

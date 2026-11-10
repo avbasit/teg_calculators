@@ -228,9 +228,9 @@ function perMemberLines(prefix: string, label: string, rates: Record<MemberKey, 
   );
 }
 
-function stage(id: string, title: string, subtotalLabel: string, lines: LineItem[]): PaymentStage {
+function stage(id: string, title: string, subtotalLabel: string, short: string, lines: LineItem[]): PaymentStage {
   const kept = lines.filter(keepLine);
-  return { id, title, subtotalLabel, lines: kept, subtotal: kept.reduce((s, l) => s + l.total, 0) };
+  return { id, title, subtotalLabel, short, lines: kept, subtotal: kept.reduce((s, l) => s + l.total, 0) };
 }
 
 /** Optional manual fees are hidden from the quote while they are zero. */
@@ -267,10 +267,10 @@ function submissionLines(
 
 function buildQuote(first: LineItem[], final: LineItem[], n: number): Quote {
   const stages = [
-    stage("first", "First payment at file submission", "First Payment (A)", first),
-    stage("final", "Final payment after approval", "Final Payment (B)", final),
+    stage("first", "First payment at file submission", "First Payment", "At file submission", first),
+    stage("final", "Final payment after approval", "Final Payment", "After approval", final),
   ];
-  return { stages, total: stages.reduce((s, st) => s + st.subtotal, 0), familySize: n };
+  return { currency: "USD", stages, total: stages.reduce((s, st) => s + st.subtotal, 0), familySize: n };
 }
 
 function computeContributionQuote(input: SknInput): Quote {

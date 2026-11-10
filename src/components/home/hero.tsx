@@ -36,7 +36,7 @@ export function Hero({ live, soon }: { live: number; soon: number }) {
           className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 font-display text-xs font-medium uppercase tracking-[0.2em] text-white/80"
         >
           <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px] shadow-emerald-400" />
-          Citizenship by Investment
+          Citizenship &amp; Residency by Investment
         </motion.p>
         <motion.h1
           variants={rise}

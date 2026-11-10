@@ -22,6 +22,16 @@ export function SknFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of Latvia — carmine with a white horizontal band (2:1:2). */
+export function LatviaFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Latvia">
+      <rect width="750" height="500" fill="#9E3039" />
+      <rect y="200" width="750" height="100" fill="#fff" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (
