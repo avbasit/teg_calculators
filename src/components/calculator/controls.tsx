@@ -167,13 +167,54 @@ export function MoneyInput({
           inputMode="numeric"
           value={value ? num(value) : ""}
           placeholder="0"
-          onChange={(e) => {
-            const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 9);
-            onChange(digits ? Number(digits) : 0);
-          }}
+          onChange={(e) => onChange(parseMoney(e.target.value))}
           className="h-full w-full rounded-xl bg-transparent pr-3.5 text-sm font-semibold text-ink tabular outline-none placeholder:text-muted/50"
         />
       </span>
     </label>
   );
+}
+
+/** Digits-only parse for money inputs (commas, symbols and spaces ignored). */
+function parseMoney(text: string): number {
+  const digits = text.replace(/[^\d]/g, "").slice(0, 9);
+  return digits ? Number(digits) : 0;
+}
+
+/** Compact money field used inside the breakdown table for editable fees. */
+export function InlineMoneyInput({
+  value,
+  onChange,
+  label,
+  currency = "USD",
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+  currency?: Currency;
+}) {
+  return (
+    <span className="inline-flex h-8 w-[120px] items-center rounded-lg border border-dashed border-royal/40 bg-white transition focus-within:border-solid focus-within:border-royal focus-within:ring-2 focus-within:ring-royal/20 hover:border-royal">
+      <span className="pl-2 text-xs font-semibold text-muted">{CURRENCY_PREFIX[currency]}</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label={label}
+        title="Editable"
+        value={value ? num(value) : ""}
+        placeholder="0"
+        onChange={(e) => onChange(parseMoney(e.target.value))}
+        className="h-full w-full min-w-0 rounded-lg bg-transparent pr-2 text-right text-sm font-semibold text-ink tabular outline-none placeholder:text-muted/50"
+      />
+    </span>
+  );
+}
+
+/** A fee the user can override; `id` matches the quote line it edits. */
+export interface FeeField {
+  id: string;
+  label: string;
+  hint?: string;
+  value: number;
+  onChange: (v: number) => void;
 }

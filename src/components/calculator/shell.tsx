@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { Children, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, ChevronRight, Copy, Info, Printer, RotateCcw, Users } from "lucide-react";
+import { Check, ChevronRight, Copy, Info, Pencil, Printer, RotateCcw, Users } from "lucide-react";
 import { stageLetter, type Quote } from "@/lib/calculators/types";
 import { money } from "@/lib/format";
-import { AnimatedNumber } from "./controls";
+import { AnimatedNumber, MoneyInput, type FeeField } from "./controls";
 import { StageCard } from "./breakdown";
 import { QuoteDocument } from "./quote-document";
 
@@ -137,8 +137,46 @@ export interface CalculatorPageProps {
   planLabel: string;
   family: { label: string; count: number }[];
   onReset: () => void;
-  /** Input cards, numbered from step 2 (step 1 is the client card). */
+  /**
+   * TEG professional fee — REQUIRED for every calculator so it can always be
+   * edited. Each field's `id` must match the quote line it controls.
+   */
+  tegFee: FeeField[];
+  /** Other negotiable fees (legal, authorized agent…), shown in their own groups. */
+  otherFees?: { title: string; fields: FeeField[] }[];
+  /** Input cards, numbered from step 2 (step 1 is the client card). The fees card follows them. */
   children: React.ReactNode;
+}
+
+function FeesCard({
+  step,
+  currency,
+  groups,
+}: {
+  step: number;
+  currency: Quote["currency"];
+  groups: { title: string; fields: FeeField[] }[];
+}) {
+  return (
+    <StepCard step={step} title="Fees">
+      <div className="space-y-6">
+        {groups.map((g) => (
+          <div key={g.title}>
+            <p className="mb-3 font-display text-[11px] font-medium uppercase tracking-[0.16em] text-muted">{g.title}</p>
+            <div className="grid gap-5 sm:grid-cols-2">
+              {g.fields.map((f) => (
+                <MoneyInput key={f.id} currency={currency} label={f.label} hint={f.hint} value={f.value} onChange={f.onChange} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 flex items-center gap-2 text-xs text-muted">
+        <Pencil className="size-3.5 text-royal" />
+        These fees can also be edited directly in the breakdown below.
+      </p>
+    </StepCard>
+  );
 }
 
 export function CalculatorPage(p: CalculatorPageProps) {
@@ -149,6 +187,9 @@ export function CalculatorPage(p: CalculatorPageProps) {
   const fmt = (n: number) => money(n, quote.currency);
   const letters = quote.stages.map((_, i) => stageLetter(i));
   const totalTitle = `${p.totalLabel} (${letters.join(" + ")})`;
+  const feeGroups = [{ title: "TEG professional fee", fields: p.tegFee }, ...(p.otherFees ?? [])];
+  const feeMap = Object.fromEntries(feeGroups.flatMap((g) => g.fields).map((f) => [f.id, f]));
+  const feesStep = Children.toArray(p.children).length + 2;
 
   async function copySummary() {
     const text = [
@@ -243,6 +284,8 @@ export function CalculatorPage(p: CalculatorPageProps) {
 
             {p.children}
 
+            <FeesCard step={feesStep} currency={quote.currency} groups={feeGroups} />
+
             <div className="pt-4">
               <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-royal">Payment schedule</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-ink">Breakdown</h2>
@@ -250,7 +293,7 @@ export function CalculatorPage(p: CalculatorPageProps) {
             <AnimatePresence initial={false}>
               {quote.stages.map((s, i) => (
                 <motion.div key={s.id} layout exit={{ opacity: 0, scale: 0.98 }}>
-                  <StageCard stage={s} letter={letters[i]} index={i} currency={quote.currency} />
+                  <StageCard stage={s} letter={letters[i]} index={i} currency={quote.currency} fees={feeMap} />
                 </motion.div>
               ))}
             </AnimatePresence>

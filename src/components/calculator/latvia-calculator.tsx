@@ -8,11 +8,12 @@ import {
   LATVIA_NOTES,
   LATVIA_PLANS,
   latviaFamilySize,
+  latviaLegalFees,
   type LatviaInput,
   type LatviaPlan,
 } from "@/lib/calculators/latvia";
 import { LatviaFlag } from "@/components/flags";
-import { MoneyInput, Segmented, Stepper } from "./controls";
+import { Segmented, Stepper } from "./controls";
 import { CalculatorPage, InfoBox, PersonCount, PlanDescription, StepCard } from "./shell";
 
 const PLAN_KEYS = Object.keys(LATVIA_PLANS).map(Number) as LatviaPlan[];
@@ -22,6 +23,7 @@ export function LatviaCalculator() {
   const quote = useMemo(() => computeLatviaQuote(input), [input]);
   const size = latviaFamilySize(input);
   const plan = LATVIA_PLANS[input.plan];
+  const legal = latviaLegalFees(input);
   const set = <K extends keyof LatviaInput>(k: K, v: LatviaInput[K]) => setInput((s) => ({ ...s, [k]: v }));
 
   const family = [
@@ -45,12 +47,28 @@ export function LatviaCalculator() {
       planLabel={`${plan.short} — ${plan.name}`}
       family={family}
       onReset={() => setInput(DEFAULT_LATVIA_INPUT)}
+      tegFee={[
+        { id: "retainer-signing", label: "TEG retainer", hint: "Upon signing of agreement", value: input.retainerOnSigning, onChange: (v) => set("retainerOnSigning", v) },
+        { id: "retainer-approval", label: "TEG retainer", hint: "After approval", value: input.retainerOnApproval, onChange: (v) => set("retainerOnApproval", v) },
+      ]}
+      otherFees={[
+        {
+          title: input.plan === 50000 ? "Legal fee" : "Legal fee (not charged on the €100,000 plan by default)",
+          fields: [
+            { id: "legal-signing", label: "Legal fee", hint: "Upon signing of agreement", value: legal.onSigning, onChange: (v) => set("legalOnSigning", v) },
+            { id: "legal-approval", label: "Legal fee", hint: "After approval", value: legal.onApproval, onChange: (v) => set("legalOnApproval", v) },
+          ],
+        },
+      ]}
     >
       <StepCard step={2} title="Investment plan">
         <Segmented<string>
           id="latvia-plan"
           value={String(input.plan)}
-          onChange={(v) => set("plan", Number(v) as LatviaPlan)}
+          onChange={(v) =>
+            // A new plan brings back that plan's default legal fee.
+            setInput((s) => ({ ...s, plan: Number(v) as LatviaPlan, legalOnSigning: null, legalOnApproval: null }))
+          }
           options={PLAN_KEYS.map((k) => ({ value: String(k), label: LATVIA_PLANS[k].short, sub: LATVIA_PLANS[k].name }))}
         />
         <PlanDescription id={String(input.plan)}>{plan.description}</PlanDescription>
@@ -80,13 +98,6 @@ export function LatviaCalculator() {
           biometrics and renewals are priced per family member; the one-time state budget payment of{" "}
           <strong className="text-ink">€10,000</strong> is charged once.
         </InfoBox>
-      </StepCard>
-
-      <StepCard step={4} title="TEG professional fee">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <MoneyInput currency="EUR" label="TEG retainer" hint="Upon signing of agreement" value={input.retainerOnSigning} onChange={(v) => set("retainerOnSigning", v)} />
-          <MoneyInput currency="EUR" label="TEG retainer" hint="After approval" value={input.retainerOnApproval} onChange={(v) => set("retainerOnApproval", v)} />
-        </div>
       </StepCard>
     </CalculatorPage>
   );

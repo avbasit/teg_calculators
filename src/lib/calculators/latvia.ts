@@ -53,6 +53,9 @@ export interface LatviaInput {
   /** TEG professional fee — workbook cells C45 / C46. */
   retainerOnSigning: number;
   retainerOnApproval: number;
+  /** Legal fee overrides; `null` uses the workbook default for the plan (C50 / C51). */
+  legalOnSigning: number | null;
+  legalOnApproval: number | null;
 }
 
 export const DEFAULT_LATVIA_INPUT: LatviaInput = {
@@ -61,7 +64,19 @@ export const DEFAULT_LATVIA_INPUT: LatviaInput = {
   children: 0,
   retainerOnSigning: 5000,
   retainerOnApproval: 5000,
+  legalOnSigning: null,
+  legalOnApproval: null,
 };
+
+/** Legal fees actually charged: the override if set, otherwise the workbook default (only on the €50,000 plan). */
+export function latviaLegalFees(input: LatviaInput): { onSigning: number; onApproval: number } {
+  const L = LATVIA_RATES.legalFee;
+  const applies = input.plan === L.plan;
+  return {
+    onSigning: input.legalOnSigning ?? (applies ? L.onSigning : 0),
+    onApproval: input.legalOnApproval ?? (applies ? L.onApproval : 0),
+  };
+}
 
 export const LATVIA_MAX_CHILDREN = 10;
 
@@ -89,6 +104,7 @@ export function computeLatviaQuote(input: LatviaInput): Quote {
   const { spouse, children } = input;
   const n = latviaFamilySize(input);
   const atAppointment = "During appointment in Latvia";
+  const legal = latviaLegalFees(input);
 
   const stages = [
     stage("investment", "Complete investment", "Complete Investment", "Investment", [
@@ -122,8 +138,8 @@ export function computeLatviaQuote(input: LatviaInput): Quote {
       line("retainer-approval", "TEG Retainer (Upon Approval)", input.retainerOnApproval, 1, undefined, "After approval"),
     ]),
     stage("legal", "Legal fee", "Legal Fee Total", "Legal fee", [
-      line("legal-signing", "Legal Fee (Upon Signing)", input.plan === R.legalFee.plan ? R.legalFee.onSigning : 0, 1, undefined, "Upon signing of agreement"),
-      line("legal-approval", "Legal Fee (Upon Approval)", input.plan === R.legalFee.plan ? R.legalFee.onApproval : 0, 1, undefined, "After approval"),
+      line("legal-signing", "Legal Fee (Upon Signing)", legal.onSigning, 1, undefined, "Upon signing of agreement"),
+      line("legal-approval", "Legal Fee (Upon Approval)", legal.onApproval, 1, undefined, "After approval"),
     ]),
   ].filter((s) => s.lines.length > 0);
 

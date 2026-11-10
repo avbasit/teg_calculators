@@ -42,6 +42,20 @@ describe("Latvia calculator", () => {
       }
   });
 
+  it("lets the legal fee be overridden on either plan", () => {
+    const q50 = computeLatviaQuote({ ...DEFAULT_LATVIA_INPUT, plan: 50000, legalOnSigning: 2500, legalOnApproval: 0 });
+    expect(q50.stages.find((s) => s.id === "legal")?.subtotal).toBe(2500);
+    const q100 = computeLatviaQuote({ ...DEFAULT_LATVIA_INPUT, legalOnSigning: 3000, legalOnApproval: 3000 });
+    expect(q100.stages.find((s) => s.id === "legal")?.subtotal).toBe(6000);
+    expect(q100.total).toBe(124587 + 6000);
+  });
+
+  it("lets the TEG professional fee be edited", () => {
+    const q = computeLatviaQuote({ ...DEFAULT_LATVIA_INPUT, retainerOnSigning: 7500, retainerOnApproval: 2500 });
+    expect(q.stages.find((s) => s.id === "teg")?.subtotal).toBe(10000);
+    expect(computeLatviaQuote({ ...DEFAULT_LATVIA_INPUT, retainerOnSigning: 8000 }).total).toBe(124587 + 3000);
+  });
+
   it("drops the TEG fee group when both retainers are zero", () => {
     const q = computeLatviaQuote({ ...DEFAULT_LATVIA_INPUT, retainerOnSigning: 0, retainerOnApproval: 0 });
     expect(q.stages.some((s) => s.id === "teg")).toBe(false);

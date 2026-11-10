@@ -12,7 +12,7 @@ import {
   type SknProgram,
 } from "@/lib/calculators/skn";
 import { SknFlag } from "@/components/flags";
-import { MoneyInput, Segmented, Stepper, Switch } from "./controls";
+import { Segmented, Stepper, Switch } from "./controls";
 import { CalculatorPage, InfoBox, PersonCount, PlanDescription, StepCard } from "./shell";
 
 export function SknCalculator() {
@@ -42,6 +42,16 @@ export function SknCalculator() {
       planLabel={program.label}
       family={family}
       onReset={() => setInput(DEFAULT_SKN_INPUT)}
+      tegFee={[
+        { id: "retainer-signing", label: "TEG retainer", hint: "Upon signing", value: input.retainerOnSigning, onChange: (v) => set("retainerOnSigning", v) },
+        { id: "retainer-approval", label: "TEG retainer", hint: "Upon approval", value: input.retainerOnApproval, onChange: (v) => set("retainerOnApproval", v) },
+      ]}
+      otherFees={[
+        {
+          title: "Authorized agent fee",
+          fields: [{ id: "agent-fee", label: "Authorized agent fee", hint: "At submission", value: input.authorizedAgentFee, onChange: (v) => set("authorizedAgentFee", v) }],
+        },
+      ]}
     >
       <StepCard step={2} title="Investment plan">
         <Segmented<SknProgram>
@@ -94,13 +104,8 @@ export function SknCalculator() {
         </InfoBox>
       </StepCard>
 
-      <StepCard step={4} title="Fees & options">
-        <div className="grid gap-5 sm:grid-cols-3">
-          <MoneyInput label="Authorized agent fee" hint="At submission" value={input.authorizedAgentFee} onChange={(v) => set("authorizedAgentFee", v)} />
-          <MoneyInput label="TEG retainer" hint="Upon signing" value={input.retainerOnSigning} onChange={(v) => set("retainerOnSigning", v)} />
-          <MoneyInput label="TEG retainer" hint="Upon approval" value={input.retainerOnApproval} onChange={(v) => set("retainerOnApproval", v)} />
-        </div>
-        <div className="mt-6 flex items-center justify-between gap-4 rounded-xl bg-canvas px-4 py-3.5">
+      <StepCard step={4} title="Options">
+        <div className="flex items-center justify-between gap-4 rounded-xl bg-canvas px-4 py-3.5">
           <div>
             <p className="text-sm font-semibold text-ink">Application includes a benefactor</p>
             <p className="text-xs text-muted">Adds US$10,000 CIU due diligence, US$300 bank due diligence and US$250 processing.</p>
