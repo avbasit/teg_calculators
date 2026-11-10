@@ -20,6 +20,16 @@ export const CALCULATORS: CalculatorMeta[] = [
     blurb: "Full payment schedule for the SISC, Public Benefit Option and Real Estate routes.",
   },
   {
+    slug: "sao-tome-and-principe",
+    category: "citizenship",
+    country: "São Tomé and Príncipe",
+    shortName: "ST",
+    region: "Middle East & Africa",
+    tags: ["Donation"],
+    status: "live",
+    blurb: "Donation route from US$90,000 for a single applicant or US$95,000 for a family of up to four.",
+  },
+  {
     slug: "dominica",
     category: "citizenship",
     country: "Dominica",

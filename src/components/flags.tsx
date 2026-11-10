@@ -32,6 +32,19 @@ export function LatviaFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of São Tomé and Príncipe — green/yellow/green (1:1.5:1), red hoist triangle, two black stars. */
+export function StpFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of São Tomé and Príncipe">
+      <rect width="750" height="500" fill="#12AD2B" />
+      <rect y="143" width="750" height="214" fill="#FFCE00" />
+      <polygon points="0,0 250,250 0,500" fill="#D21034" />
+      <polygon points={starPoints(410, 250, 72, 0)} fill="#000" />
+      <polygon points={starPoints(600, 250, 72, 0)} fill="#000" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (
