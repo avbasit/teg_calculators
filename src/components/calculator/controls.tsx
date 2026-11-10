@@ -90,7 +90,12 @@ export function Segmented<T extends string>({
   id: string;
 }) {
   return (
-    <div role="radiogroup" className="grid grid-cols-2 gap-1 rounded-2xl bg-canvas p-1 ring-1 ring-line">
+    <div
+      role="radiogroup"
+      className={`grid gap-1 rounded-2xl bg-canvas p-1 ring-1 ring-line ${
+        options.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"
+      }`}
+    >
       {options.map((o) => {
         const active = o.value === value;
         return (

@@ -7,9 +7,9 @@ export const CALCULATORS: CalculatorMeta[] = [
     country: "St. Kitts & Nevis",
     shortName: "SKN",
     region: "Caribbean",
-    programs: ["SISC", "PBO"],
+    programs: ["SISC", "PBO", "Real Estate"],
     status: "live",
-    blurb: "Full payment schedule for the SISC and Public Benefit Option routes.",
+    blurb: "Full payment schedule for the SISC, Public Benefit Option and Real Estate routes.",
   },
   {
     slug: "dominica",

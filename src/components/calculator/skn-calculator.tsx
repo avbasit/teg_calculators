@@ -9,7 +9,7 @@ import {
   DEFAULT_SKN_INPUT,
   familySize,
   SKN_MEMBERS,
-  SKN_NOTES,
+  sknNotes,
   SKN_PROGRAMS,
   type SknInput,
   type SknProgram,
@@ -71,7 +71,8 @@ export function SknCalculator() {
 
   const set = <K extends keyof SknInput>(k: K, v: SknInput[K]) => setInput((s) => ({ ...s, [k]: v }));
   const program = SKN_PROGRAMS[input.program];
-  const programLabel = `${program.name} (${program.short})`;
+  const programLabel = program.label;
+  const notes = sknNotes(input.program);
 
   const familyRows = SKN_MEMBERS.filter((m) => input.family[m.key] > 0).map((m) => ({
     label: m.label,
@@ -223,11 +224,31 @@ export function SknCalculator() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 rounded-xl bg-canvas px-4 py-3 text-xs leading-relaxed text-muted">
-                The base contribution of <strong className="text-ink">US$250,000</strong> covers up to 4 persons. Each
-                additional dependant under 18 adds <strong className="text-ink">US$25,000</strong>; each additional dependant
-                18+ adds <strong className="text-ink">US$50,000</strong>.
-              </p>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p
+                  key={input.program === "RE" ? "re" : "contribution"}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="mt-5 rounded-xl bg-canvas px-4 py-3 text-xs leading-relaxed text-muted"
+                >
+                  {input.program === "RE" ? (
+                    <>
+                      Government processing fee at approval, per person: main applicant{" "}
+                      <strong className="text-ink">US$25,000</strong>, spouse <strong className="text-ink">US$15,000</strong>,
+                      children under 18 <strong className="text-ink">US$10,000</strong>, dependants 18+{" "}
+                      <strong className="text-ink">US$15,000</strong>.
+                    </>
+                  ) : (
+                    <>
+                      The base contribution of <strong className="text-ink">US$250,000</strong> covers up to 4 persons. Each
+                      additional dependant under 18 adds <strong className="text-ink">US$25,000</strong>; each additional
+                      dependant 18+ adds <strong className="text-ink">US$50,000</strong>.
+                    </>
+                  )}
+                </motion.p>
+              </AnimatePresence>
             </Card>
 
             <Card step={4} title="Fees & options">
@@ -256,7 +277,7 @@ export function SknCalculator() {
             <section className="rounded-2xl border border-line bg-cream p-5 sm:p-6">
               <h3 className="font-bold text-ink">Notes</h3>
               <ul className="mt-3 space-y-2 text-sm text-muted">
-                {SKN_NOTES.map((n) => (
+                {notes.map((n) => (
                   <li key={n} className="flex gap-2">
                     <span className="mt-2 size-1 shrink-0 rounded-full bg-royal" />
                     {n}
@@ -345,7 +366,7 @@ export function SknCalculator() {
               </div>
             </motion.div>
             <p className="mt-3 px-2 text-xs leading-relaxed text-muted">
-              Figures follow the TEG SKN pricing workbook (18 Oct 2026). Amounts in USD, exclusive of VAT.
+              Figures follow the TEG SKN {program.workbook}. Amounts in USD, exclusive of VAT.
             </p>
           </aside>
         </div>
@@ -378,7 +399,7 @@ export function SknCalculator() {
         reference={stamp.reference}
         family={familyRows}
         quote={quote}
-        notes={SKN_NOTES}
+        notes={notes}
       />
     </>
   );
