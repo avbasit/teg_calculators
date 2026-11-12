@@ -30,6 +30,17 @@ export const CALCULATORS: CalculatorMeta[] = [
     blurb: "Donation route from US$90,000 for a single applicant or US$95,000 for a family of up to four.",
   },
   {
+    slug: "vanuatu",
+    category: "citizenship",
+    country: "Vanuatu",
+    programme: "Development Support Program (DSP)",
+    shortName: "VU",
+    region: "Asia-Pacific",
+    tags: ["Donation"],
+    status: "live",
+    blurb: "DSP donation route from US$130,000 for a single applicant, priced by family size.",
+  },
+  {
     slug: "dominica",
     category: "citizenship",
     country: "Dominica",

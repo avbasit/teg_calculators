@@ -45,6 +45,21 @@ export function StpFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of Vanuatu (simplified emblem) — red over green, black-edged yellow Y, black hoist triangle, yellow tusk. */
+export function VanuatuFlag({ className }: { className?: string }) {
+  const pall = "M0,0 L300,250 L0,500 M300,250 L750,250";
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Vanuatu">
+      <rect width="750" height="250" fill="#D21034" />
+      <rect y="250" width="750" height="250" fill="#009543" />
+      <path d={pall} fill="none" stroke="#000" strokeWidth="130" />
+      <path d={pall} fill="none" stroke="#FDCE12" strokeWidth="64" />
+      <polygon points="0,62 226,250 0,438" fill="#000" />
+      <path d="M118,205 A48,48 0 1 0 128,262" fill="none" stroke="#FDCE12" strokeWidth="16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (
