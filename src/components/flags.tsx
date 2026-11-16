@@ -60,6 +60,31 @@ export function VanuatuFlag({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Flag of Antigua and Barbuda — red field, inverted triangle of black, blue and
+ * white bands with a rising yellow sun. Bands are drawn as trapezoids along the
+ * triangle edges (x = 0.75y) so no clip path is needed.
+ */
+export function AntiguaFlag({ className }: { className?: string }) {
+  const band = (y1: number, y2: number) =>
+    `${0.75 * y1},${y1} ${750 - 0.75 * y1},${y1} ${750 - 0.75 * y2},${y2} ${0.75 * y2},${y2}`;
+  const sun: string[] = [];
+  for (let i = 0; i < 32; i++) {
+    const r = i % 2 === 0 ? 100 : 58;
+    const a = (i * Math.PI) / 16;
+    sun.push(`${(375 + r * Math.cos(a)).toFixed(1)},${(210 - r * Math.sin(a)).toFixed(1)}`);
+  }
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Antigua and Barbuda">
+      <rect width="750" height="500" fill="#CE1126" />
+      <polygon points={band(0, 210)} fill="#000" />
+      <polygon points={sun.join(" ")} fill="#FCD116" />
+      <polygon points={band(210, 290)} fill="#0072C6" />
+      <polygon points="217.5,290 532.5,290 375,500" fill="#fff" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (

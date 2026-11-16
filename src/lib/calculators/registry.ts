@@ -20,6 +20,16 @@ export const CALCULATORS: CalculatorMeta[] = [
     blurb: "Full payment schedule for the SISC, Public Benefit Option and Real Estate routes.",
   },
   {
+    slug: "antigua-and-barbuda",
+    category: "citizenship",
+    country: "Antigua & Barbuda",
+    shortName: "AG",
+    region: "Caribbean",
+    tags: ["Contribution", "Business"],
+    status: "live",
+    blurb: "Non-refundable contribution from US$230,000 or a US$400,000 business investment.",
+  },
+  {
     slug: "sao-tome-and-principe",
     category: "citizenship",
     country: "São Tomé and Príncipe",

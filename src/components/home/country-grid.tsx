@@ -5,10 +5,11 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Ban, Clock, PauseCircle } from "lucide-react";
 import type { CalculatorMeta, CalculatorStatus } from "@/lib/calculators/types";
-import { CountryMonogram, LatviaFlag, SknFlag, StpFlag, VanuatuFlag } from "@/components/flags";
+import { AntiguaFlag, CountryMonogram, LatviaFlag, SknFlag, StpFlag, VanuatuFlag } from "@/components/flags";
 
 const FLAGS: Record<string, React.ComponentType<{ className?: string }>> = {
   "st-kitts-nevis": SknFlag,
+  "antigua-and-barbuda": AntiguaFlag,
   latvia: LatviaFlag,
   "sao-tome-and-principe": StpFlag,
   vanuatu: VanuatuFlag,
