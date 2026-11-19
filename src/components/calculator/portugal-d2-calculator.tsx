@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   computePtQuote,
   DEFAULT_PT_INPUT,
+  PT_INCLUDED,
   PT_MEMBERS,
   PT_NOTES,
   PT_RATES,
@@ -20,9 +21,13 @@ const eur = (n: number) => money(n, "EUR");
 
 export const PT_D2_DESCRIPTION = (
   <>
+    <strong className="text-ink">
+      This cost includes {PT_INCLUDED.slice(0, -1).join(", ")} and {PT_INCLUDED[PT_INCLUDED.length - 1]}.
+    </strong>{" "}
     TEG fee of {eur(PT_RATES.fee.main)} for the main applicant, {eur(PT_RATES.fee.spouse)} for a spouse and{" "}
-    {eur(PT_RATES.fee.perChild)} per child — 50% upon signing and 50% after the visa is issued by the embassy. No other
-    professional fee applies.
+    {eur(PT_RATES.fee.perChild)} per child — 50% upon signing, {eur(PT_RATES.tenancyContract)} before the embassy
+    appointment for the tenancy contract (irrespective of family size) and the remainder after the visa is issued. No
+    other professional fee applies.
   </>
 );
 
@@ -56,9 +61,9 @@ export function PortugalD2Calculator({ programme }: { programme: React.ReactNode
       family={family}
       onReset={() => setInput(DEFAULT_PT_INPUT)}
       tegFee={[
-        { id: "fee-main", label: "Main applicant", hint: "Full fee · paid 50 / 50", value: input.feeMain, onChange: (v) => set("feeMain", v) },
-        { id: "fee-spouse", label: "Spouse", hint: "Full fee · paid 50 / 50", value: input.feeSpouse, onChange: (v) => set("feeSpouse", v) },
-        { id: "fee-child", label: "Each child", hint: "Full fee · paid 50 / 50", value: input.feeChild, onChange: (v) => set("feeChild", v) },
+        { id: "fee-main", label: "Main applicant", hint: "Full fee", value: input.feeMain, onChange: (v) => set("feeMain", v) },
+        { id: "fee-spouse", label: "Spouse", hint: "Full fee", value: input.feeSpouse, onChange: (v) => set("feeSpouse", v) },
+        { id: "fee-child", label: "Each child", hint: "Full fee", value: input.feeChild, onChange: (v) => set("feeChild", v) },
       ]}
     >
       {programme}

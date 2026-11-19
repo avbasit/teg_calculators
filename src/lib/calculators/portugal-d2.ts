@@ -17,8 +17,10 @@ export const PT_MEMBERS: { key: PtMemberKey; label: string; max: number }[] = [
 export type PtFamily = Record<PtMemberKey, number>;
 
 export const PT_RATES = {
-  /** C3:C5 — TEG fee per member, paid 50% in advance and 50% after the visa is issued (A7:A8) */
+  /** C3:C5 — TEG fee per member: 50% upon signing, €1,000 before the embassy appointment, remainder after the visa */
   fee: { main: 10000, spouse: 2000, perChild: 1000 },
+  /** Flat amount for the tenancy contract, before the embassy appointment — irrespective of family size */
+  tenancyContract: 1000,
   /** C10 — per person, approximate */
   embassyFee: 155,
   /** C11 — per person, approximate */
@@ -29,7 +31,7 @@ export const PT_RATES = {
 
 export interface PtInput {
   family: PtFamily;
-  /** Full TEG fee per member — split 50 / 50 across the two payments. */
+  /** Full TEG fee per member — 50% upon signing, the rest across the two later payments. */
   feeMain: number;
   feeSpouse: number;
   feeChild: number;
@@ -78,9 +80,19 @@ export function computePtQuote(input: PtInput): Quote {
     line(`${prefix}-child`, "TEG Fee (50%)", input.feeChild / 2, child, "Each child", timeline),
   ];
 
+  const totalFee = input.feeMain + input.feeSpouse * spouse + input.feeChild * child;
+  const remaining = totalFee / 2;
+  // €1,000 for the tenancy contract comes out of the remaining 50%, never more than what is left.
+  const tenancy = Math.min(R.tenancyContract, remaining);
+
   const stages = [
-    stage("advance", "50% advance", "Advance Payment", "50% advance", half("advance", "Upon signing")),
-    stage("after-visa", "50% after visa from embassy", "Balance Payment", "50% after visa", half("after-visa", "After visa from embassy")),
+    stage("advance", "Upon signing", "First Payment", "Upon signing", half("advance", "Upon signing")),
+    stage("tenancy", "Before embassy appointment", "Second Payment", "Before embassy appointment", [
+      line("tenancy-contract", "Tenancy Contract", tenancy, 1, "Flat, irrespective of family size", "Before embassy appointment"),
+    ]),
+    stage("after-visa", "After visa from embassy", "Final Payment", "After visa", [
+      line("balance", "TEG Fee (Remaining)", remaining - tenancy, 1, "Remaining 50% less the tenancy contract payment", "After visa from embassy"),
+    ]),
     stage("third-party", "Third-party costs (approx.) — paid directly by client", "Third-Party Costs", "Embassy & insurance (direct)", [
       line("embassy", "Embassy Fee (approx.)", R.embassyFee, n, `${n} × person · paid directly to the embassy`, "On visa application"),
       line("travel-insurance", "Travel Insurance (approx.)", R.travelInsurance, n, `${n} × person · paid directly to the insurance company`, "Before embassy appointment"),
@@ -90,9 +102,19 @@ export function computePtQuote(input: PtInput): Quote {
   return { currency: "EUR", stages, total: stages.reduce((s, st) => s + st.subtotal, 0), familySize: n };
 }
 
+export const PT_INCLUDED = [
+  "NIF",
+  "Company Formation",
+  "Personal & Business Bank Account",
+  "Tenancy Contract",
+  "Business Plan",
+  "Immigration File preparation for embassy filing",
+];
+
 export const PT_NOTES = [
+  `The TEG fee includes ${PT_INCLUDED.slice(0, -1).join(", ")} and ${PT_INCLUDED[PT_INCLUDED.length - 1]}.`,
   "All transactions will take place in EUR or AED, to be transferred to the company bank account in Dubai, UAE.",
-  "TEG fee is payable 50% in advance and 50% after the visa is issued by the embassy.",
+  "TEG fee is payable 50% upon signing, €1,000 before the embassy appointment for the tenancy contract (irrespective of family size), and the remaining balance after the visa is issued by the embassy.",
   "Embassy fee and travel insurance are approximate and are paid directly by the client to the embassy and the insurance company. TEG will not receive this amount in any form.",
   "Minimum settlement funds (€11,500 per year for the main applicant, €5,750 for a spouse and €3,450 per child) must be shown and are not a cost.",
   "The client is responsible for the exchange rate difference.",
