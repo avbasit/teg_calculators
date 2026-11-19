@@ -85,6 +85,30 @@ export function AntiguaFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of Portugal (simplified emblem) — green hoist (2:3) and red field, yellow armillary sphere with the shield. */
+export function PortugalFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Portugal">
+      <rect width="750" height="500" fill="#DA291C" />
+      <rect width="300" height="500" fill="#046A38" />
+      <circle cx="300" cy="250" r="105" fill="none" stroke="#FFE900" strokeWidth="22" />
+      <ellipse cx="300" cy="250" rx="105" ry="38" fill="none" stroke="#FFE900" strokeWidth="14" />
+      <path d="M248,195 h104 v70 a52,52 0 0 1 -104,0 z" fill="#fff" stroke="#DA291C" strokeWidth="10" />
+      <path d="M268,213 h64 v48 a32,32 0 0 1 -64,0 z" fill="#002D72" />
+    </svg>
+  );
+}
+
+/** Flag of Spain (without coat of arms) — red, yellow, red (1:2:1). */
+export function SpainFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Spain">
+      <rect width="750" height="500" fill="#AA151B" />
+      <rect y="125" width="750" height="250" fill="#F1BF00" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (

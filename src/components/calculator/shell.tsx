@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, Copy, Info, Pencil, Printer, RotateCcw, Users } from "lucide-react";
 import { stageLetter, type Quote } from "@/lib/calculators/types";
 import { money } from "@/lib/format";
-import { AnimatedNumber, MoneyInput, type FeeField } from "./controls";
+import { AnimatedNumber, MoneyInput, Segmented, type FeeField } from "./controls";
 import { StageCard } from "./breakdown";
 import { QuoteDocument } from "./quote-document";
 
@@ -139,7 +139,8 @@ export interface CalculatorPageProps {
   onReset: () => void;
   /**
    * TEG professional fee — REQUIRED for every calculator so it can always be
-   * edited. Each field's `id` must match the quote line it controls.
+   * edited. A field whose `id` matches a quote line is also editable inline in
+   * the breakdown (fees split across stages, e.g. 50 / 50, are edited here only).
    */
   tegFee: FeeField[];
   /** Other negotiable fees (legal, authorized agent…), shown in their own groups. */
@@ -152,10 +153,12 @@ function FeesCard({
   step,
   currency,
   groups,
+  editableInBreakdown,
 }: {
   step: number;
   currency: Quote["currency"];
   groups: { title: string; fields: FeeField[] }[];
+  editableInBreakdown: boolean;
 }) {
   return (
     <StepCard step={step} title="Fees">
@@ -171,10 +174,12 @@ function FeesCard({
           </div>
         ))}
       </div>
-      <p className="mt-5 flex items-center gap-2 text-xs text-muted">
-        <Pencil className="size-3.5 text-royal" />
-        These fees can also be edited directly in the breakdown below.
-      </p>
+      {editableInBreakdown && (
+        <p className="mt-5 flex items-center gap-2 text-xs text-muted">
+          <Pencil className="size-3.5 text-royal" />
+          These fees can also be edited directly in the breakdown below.
+        </p>
+      )}
     </StepCard>
   );
 }
@@ -190,6 +195,7 @@ export function CalculatorPage(p: CalculatorPageProps) {
   const feeGroups = [{ title: "TEG professional fee", fields: p.tegFee }, ...(p.otherFees ?? [])];
   const feeMap = Object.fromEntries(feeGroups.flatMap((g) => g.fields).map((f) => [f.id, f]));
   const feesStep = Children.toArray(p.children).length + 2;
+  const editableInBreakdown = quote.stages.some((s) => s.lines.some((l) => l.id in feeMap));
 
   async function copySummary() {
     const text = [
@@ -284,7 +290,7 @@ export function CalculatorPage(p: CalculatorPageProps) {
 
             {p.children}
 
-            <FeesCard step={feesStep} currency={quote.currency} groups={feeGroups} />
+            <FeesCard step={feesStep} currency={quote.currency} groups={feeGroups} editableInBreakdown={editableInBreakdown} />
 
             <div className="pt-4">
               <p className="font-display text-xs font-medium uppercase tracking-[0.2em] text-royal">Payment schedule</p>
@@ -434,5 +440,46 @@ export function CalculatorPage(p: CalculatorPageProps) {
         totalLabel={p.totalLabel}
       />
     </>
+  );
+}
+
+/* ---------- Programme switch (countries with more than one calculator) ---------- */
+
+export interface ProgrammeOption<T extends string> {
+  value: T;
+  label: string;
+  sub: string;
+  description: React.ReactNode;
+}
+
+/**
+ * Step 2 on country pages that group several programmes (Portugal, Spain…).
+ * With a single programme it shows that programme as the only option; add more
+ * options and it becomes a switch like the SKN route picker.
+ */
+export function ProgrammeCard<T extends string>({
+  id,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: ProgrammeOption<T>[];
+}) {
+  const current = options.find((o) => o.value === value) ?? options[0];
+  return (
+    <StepCard step={2} title="Programme">
+      {options.length > 1 ? (
+        <Segmented<T> id={id} value={value} onChange={onChange} options={options.map(({ value, label, sub }) => ({ value, label, sub }))} />
+      ) : (
+        <div className="rounded-2xl bg-white px-4 py-3 shadow-card ring-1 ring-royal/25">
+          <p className="text-base font-bold text-royal">{current.label}</p>
+          <p className="text-xs text-muted">{current.sub}</p>
+        </div>
+      )}
+      <PlanDescription id={current.value}>{current.description}</PlanDescription>
+    </StepCard>
   );
 }
