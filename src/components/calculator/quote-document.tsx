@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- plain <img> keeps the print output simple */
-import { stageLetter, type Quote } from "@/lib/calculators/types";
+import { stageLetter, type InfoSection, type Quote } from "@/lib/calculators/types";
 import { TEG } from "@/lib/brand";
 import { money, num } from "@/lib/format";
 
@@ -15,6 +15,7 @@ export function QuoteDocument({
   family,
   quote,
   notes,
+  info,
   totalLabel,
 }: {
   title: string;
@@ -25,6 +26,7 @@ export function QuoteDocument({
   family: { label: string; count: number }[];
   quote: Quote;
   notes: string[];
+  info?: InfoSection;
   totalLabel: string;
 }) {
   const fmt = (n: number) => money(n, quote.currency);
@@ -108,6 +110,23 @@ export function QuoteDocument({
         </span>
         <span className="tabular">{fmt(quote.total)}</span>
       </div>
+
+      {info && (
+        <section className="mt-6 break-inside-avoid">
+          <p className="font-bold uppercase tracking-wider text-ink">{info.title}</p>
+          <table className="mt-1.5 w-full border-collapse">
+            <tbody>
+              {info.rows.map((r) => (
+                <tr key={r.label} className="border-b border-line">
+                  <td className="px-2 py-1.5 font-semibold">{r.label}</td>
+                  <td className="px-2 py-1.5 text-right text-muted">{r.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {info.note && <p className="mt-1.5 text-muted">{info.note}</p>}
+        </section>
+      )}
 
       <section className="mt-6 break-inside-avoid">
         <p className="font-bold uppercase tracking-wider text-ink">Notes</p>

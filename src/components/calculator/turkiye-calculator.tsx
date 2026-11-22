@@ -46,6 +46,7 @@ export function TurkiyeCalculator() {
       caption={`${route.short}${re ? ` ${usd(price)}` : ""} · ${size} ${size === 1 ? "person" : "persons"}`}
       footnote="Figures follow the TEG Türkiye CBI sheet. Amounts in USD, exclusive of VAT. Final amounts may vary."
       notes={trNotes(input.route)}
+      info={re ? TR_OTHER_DETAILS : undefined}
       documentTitle="Payment Schedule — Türkiye Citizenship by Investment"
       planLabel={re ? `Real Estate (${usd(price)})` : `Bank Deposit (${usd(TR_RATES.bankDeposit)})`}
       family={family}
@@ -124,16 +125,16 @@ export function TurkiyeCalculator() {
       </StepCard>
 
       {re && (
-        <StepCard step={4} title="Other details (information only)">
+        <StepCard step={4} title={TR_OTHER_DETAILS.title}>
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
-            {TR_OTHER_DETAILS.map((d) => (
+            {TR_OTHER_DETAILS.rows.map((d) => (
               <div key={d.label} className="flex items-center justify-between gap-3 border-b border-line/70 pb-2 text-sm">
                 <dt className="text-muted">{d.label}</dt>
                 <dd className="font-semibold text-ink">{d.value}</dd>
               </div>
             ))}
           </dl>
-          <p className="mt-4 text-xs text-muted">Not part of the main calculation and not included in the total.</p>
+          <p className="mt-4 text-xs text-muted">{TR_OTHER_DETAILS.note}</p>
         </StepCard>
       )}
     </CalculatorPage>

@@ -3,7 +3,7 @@
  *
  * Ported from "Turkey CBI.xlsx" (Sheet1). Column D is the Real Estate route, column G the Bank Deposit route.
  */
-import type { LineItem, PaymentStage, Quote } from "./types";
+import type { InfoSection, LineItem, PaymentStage, Quote } from "./types";
 
 export type TrRoute = "RE" | "BD";
 
@@ -27,7 +27,13 @@ export type TrMemberKey = "main" | "spouse" | "child";
 export const TR_MEMBERS: { key: TrMemberKey; label: string; hint?: string; adult: boolean; max: number }[] = [
   { key: "main", label: "Main Applicant", adult: true, max: 1 },
   { key: "spouse", label: "Spouse", adult: true, max: 1 },
-  { key: "child", label: "Dependent Child", hint: "Under 18.", adult: false, max: 10 },
+  {
+    key: "child",
+    label: "Dependent Child",
+    hint: "Under 18. Adult children with qualifying dependency, particularly due to disability, may have an exception under Article 12(1) of Turkish Citizenship Law No. 5901.",
+    adult: false,
+    max: 10,
+  },
 ];
 
 export type TrFamily = Record<TrMemberKey, number>;
@@ -156,15 +162,19 @@ export function computeTrQuote(input: TrInput): Quote {
   return { currency: "USD", stages, total: stages.reduce((s, st) => s + st.subtotal, 0), familySize: n };
 }
 
-/** D38:D48 — shown for information only, not part of the calculation. */
-export const TR_OTHER_DETAILS: { label: string; value: string }[] = [
-  { label: "Annual Property Tax", value: "0.1% – 0.2%" },
-  { label: "Annual Maintenance Charge", value: "TBD" },
-  { label: "DASK Earthquake Insurance", value: "US$50 – US$150 / year" },
-  { label: "Utility Connection Cost", value: "US$100 – US$300" },
-  { label: "ROI / Year (depending on investment)", value: "3% – 5%" },
-  { label: "Buyback after 3 Years", value: "Depending on project" },
-];
+/** D38:D48 — shown (and printed) for information only, not part of the calculation. */
+export const TR_OTHER_DETAILS: InfoSection = {
+  title: "Other details (information only)",
+  note: "Not part of the main calculation and not included in the total.",
+  rows: [
+    { label: "Annual Property Tax", value: "0.1% – 0.2%" },
+    { label: "Annual Maintenance Charge", value: "TBD" },
+    { label: "DASK Earthquake Insurance", value: "US$50 – US$150 / year" },
+    { label: "Utility Connection Cost", value: "US$100 – US$300" },
+    { label: "ROI / Year (depending on investment)", value: "3% – 5%" },
+    { label: "Buyback after 3 Years", value: "Depending on project" },
+  ],
+};
 
 export function trNotes(route: TrRoute): string[] {
   return [

@@ -31,6 +31,13 @@ export interface Quote {
   familySize: number;
 }
 
+/** Information-only rows printed before the notes (never part of the total). */
+export interface InfoSection {
+  title: string;
+  note?: string;
+  rows: { label: string; value: string }[];
+}
+
 export type CalculatorCategory = "citizenship" | "residency";
 export type CalculatorStatus = "live" | "soon" | "paused" | "discontinued";
 export type CalculatorRegion = "Caribbean" | "Europe" | "Americas" | "Asia-Pacific" | "Middle East & Africa";

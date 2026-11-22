@@ -4,7 +4,7 @@ import { Children, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, Copy, Info, Pencil, Printer, RotateCcw, Users } from "lucide-react";
-import { stageLetter, type Quote } from "@/lib/calculators/types";
+import { stageLetter, type InfoSection, type Quote } from "@/lib/calculators/types";
 import { money } from "@/lib/format";
 import { AnimatedNumber, MoneyInput, Segmented, type FeeField } from "./controls";
 import { StageCard } from "./breakdown";
@@ -143,6 +143,8 @@ export interface CalculatorPageProps {
    * the breakdown (fees split across stages, e.g. 50 / 50, are edited here only).
    */
   tegFee: FeeField[];
+  /** Information-only details, printed on the quote just before the notes (not part of the total). */
+  info?: InfoSection;
   /** Other negotiable fees (legal, authorized agent…), shown in their own groups. */
   otherFees?: { title: string; fields: FeeField[] }[];
   /** Input cards, numbered from step 2 (step 1 is the client card). The fees card follows them. */
@@ -437,6 +439,7 @@ export function CalculatorPage(p: CalculatorPageProps) {
         family={p.family}
         quote={quote}
         notes={p.notes}
+        info={p.info}
         totalLabel={p.totalLabel}
       />
     </>
