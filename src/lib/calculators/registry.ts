@@ -86,9 +86,9 @@ export const CALCULATORS: CalculatorMeta[] = [
     country: "Türkiye",
     shortName: "TR",
     region: "Europe",
-    tags: ["Real Estate"],
-    status: "soon",
-    blurb: "Citizenship through qualifying real estate investment.",
+    tags: ["Real Estate", "Bank Deposit"],
+    status: "live",
+    blurb: "Citizenship through real estate from US$400,000 or a US$500,000 bank deposit.",
   },
 
   /* ---------------- Residency ---------------- */
@@ -153,7 +153,7 @@ export const CALCULATORS: CalculatorMeta[] = [
     shortName: "GR",
     region: "Europe",
     tags: ["From €250,000"],
-    status: "soon",
+    status: "live",
     blurb: "Residence permit through real estate, granted within 60 days.",
   },
   {

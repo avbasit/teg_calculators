@@ -5,7 +5,18 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Ban, Clock, PauseCircle } from "lucide-react";
 import type { CalculatorMeta, CalculatorStatus } from "@/lib/calculators/types";
-import { AntiguaFlag, CountryMonogram, LatviaFlag, PortugalFlag, SknFlag, SpainFlag, StpFlag, VanuatuFlag } from "@/components/flags";
+import {
+  AntiguaFlag,
+  CountryMonogram,
+  GreeceFlag,
+  LatviaFlag,
+  PortugalFlag,
+  SknFlag,
+  SpainFlag,
+  StpFlag,
+  TurkiyeFlag,
+  VanuatuFlag,
+} from "@/components/flags";
 
 const FLAGS: Record<string, React.ComponentType<{ className?: string }>> = {
   "st-kitts-nevis": SknFlag,
@@ -15,6 +26,8 @@ const FLAGS: Record<string, React.ComponentType<{ className?: string }>> = {
   vanuatu: VanuatuFlag,
   portugal: PortugalFlag,
   spain: SpainFlag,
+  greece: GreeceFlag,
+  turkiye: TurkiyeFlag,
 };
 
 const ALL = "All";

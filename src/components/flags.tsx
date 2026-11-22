@@ -109,6 +109,34 @@ export function SpainFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of Greece — nine blue and white stripes with a white cross on a blue canton. */
+export function GreeceFlag({ className }: { className?: string }) {
+  const stripe = 500 / 9;
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Greece">
+      <rect width="750" height="500" fill="#0D5EAF" />
+      {[1, 3, 5, 7].map((i) => (
+        <rect key={i} y={i * stripe} width="750" height={stripe} fill="#fff" />
+      ))}
+      <rect width={stripe * 5} height={stripe * 5} fill="#0D5EAF" />
+      <rect x={stripe * 2} width={stripe} height={stripe * 5} fill="#fff" />
+      <rect y={stripe * 2} width={stripe * 5} height={stripe} fill="#fff" />
+    </svg>
+  );
+}
+
+/** Flag of Türkiye — red field with a white crescent and star. */
+export function TurkiyeFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Türkiye">
+      <rect width="750" height="500" fill="#E30A17" />
+      <circle cx="270" cy="250" r="125" fill="#fff" />
+      <circle cx="301" cy="250" r="100" fill="#E30A17" />
+      <polygon points={starPoints(415, 250, 62.5, -90)} fill="#fff" />
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (
