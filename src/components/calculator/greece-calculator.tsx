@@ -9,6 +9,7 @@ import {
   GR_RATES,
   grFamilySize,
   grLandRegistry,
+  grLawyerFee,
   grPropertyPrice,
   type GrInput,
 } from "@/lib/calculators/greece";
@@ -25,6 +26,7 @@ export function GreeceCalculator() {
   const size = grFamilySize(input.family);
   const price = grPropertyPrice(input);
   const land = grLandRegistry(input);
+  const lawyer = grLawyerFee(input);
   const set = <K extends keyof GrInput>(k: K, v: GrInput[K]) => setInput((s) => ({ ...s, [k]: v }));
   const belowMin = input.propertyPrice < GR_RATES.minPropertyPrice;
 
@@ -42,7 +44,7 @@ export function GreeceCalculator() {
       quote={quote}
       totalLabel="Total cost"
       caption={`Property ${eur(price)} · ${size} ${size === 1 ? "person" : "persons"}`}
-      footnote="Figures follow the TEG Greece pricing sample. Amounts in EUR. The property price is paid directly to the developer / seller and is not included."
+      footnote="Figures follow the TEG Greece pricing sample. Amounts in EUR. Final cost may vary depending on the developer / property selected."
       notes={GR_NOTES}
       documentTitle="Payment Schedule — Greece Golden Visa"
       planLabel={`Golden Visa — Real Estate (${eur(price)})`}
@@ -53,6 +55,18 @@ export function GreeceCalculator() {
         { id: "retainer-approval", label: "TEG professional fee", hint: "After approval", value: input.retainerAfterApproval, onChange: (v) => set("retainerAfterApproval", v) },
       ]}
       otherFees={[
+        {
+          title: "Lawyer's fee",
+          fields: [
+            {
+              id: "lawyer",
+              label: "Lawyer's fee (before VAT)",
+              hint: `Minimum 1% of the contract price · ${eur(lawyer.min)}`,
+              value: input.lawyerFee ?? lawyer.min,
+              onChange: (v) => set("lawyerFee", v),
+            },
+          ],
+        },
         {
           title: "Land registry fee",
           fields: [
@@ -81,10 +95,10 @@ export function GreeceCalculator() {
           </p>
         )}
         <InfoBox id="gr-property">
-          The property is paid <strong className="text-ink">directly to the developer / seller</strong> and is not part of the
-          total. Lawyer (1% + 24% VAT), notary (1.5%), land registry (0.6–0.9%) and title deed transfer (3%) fees follow
-          the contract price. Land registry varies by area: it starts at the 0.6% minimum ({eur(land.min)}) and can be raised
-          up to about {eur(land.max)} in the Fees card.
+          The property is paid <strong className="text-ink">directly to the developer / seller</strong> and is included in the
+          property purchase total (A). Notary (1.5%) and title deed transfer (3%) fees follow the contract price. The
+          lawyer&apos;s fee starts at the 1% minimum ({eur(lawyer.min)}) plus 24% VAT, and land registry at the 0.6% minimum
+          ({eur(land.min)}, up to about {eur(land.max)} depending on area). Both can be raised in the Fees card.
         </InfoBox>
       </StepCard>
 

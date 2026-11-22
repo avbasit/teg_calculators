@@ -2,8 +2,7 @@
  * Greece — Golden Visa (permanent residency through real estate).
  *
  * Ported from "Greece - Pricing Sample.xlsx" (Лист1). Cell references are noted next to each rate.
- * The property itself is paid directly to the developer / seller, so — as on the sheet (E10, E19, E20)
- * — it is shown for reference and is not part of the quote total.
+ * Unlike the sheet's E10, the property price is part of the property purchase stage (A).
  */
 import type { LineItem, PaymentStage, Quote } from "./types";
 
@@ -21,7 +20,7 @@ export type GrFamily = Record<GrMemberKey, number>;
 export const GR_RATES = {
   /** B3 — contract price; editable but never below €250,000 */
   minPropertyPrice: 250000,
-  /** B5:C5 — lawyer's fee 1% of the contract price, plus 24% VAT */
+  /** B5:C5 — lawyer's fee, minimum 1% of the contract price (editable above), plus 24% VAT */
   lawyer: { rate: 0.01, vat: 0.24 },
   /** B6 — public notary fee 1.5% */
   notaryRate: 0.015,
@@ -47,6 +46,8 @@ export interface GrInput {
   propertyPrice: number;
   /** Land registry fee override; `null` uses the 0.6% minimum. Never below that minimum. */
   landRegistry: number | null;
+  /** Lawyer's fee override; `null` uses the 1% minimum. Never below that minimum. */
+  lawyerFee: number | null;
   retainerOnSigning: number;
   retainerAfterApproval: number;
 }
@@ -55,6 +56,7 @@ export const DEFAULT_GR_INPUT: GrInput = {
   family: { main: 1, spouse: 0, child: 0, parent: 0 },
   propertyPrice: GR_RATES.minPropertyPrice,
   landRegistry: null,
+  lawyerFee: null,
   retainerOnSigning: GR_RATES.tegFee.onSigning,
   retainerAfterApproval: GR_RATES.tegFee.afterApproval,
 };
@@ -78,6 +80,12 @@ export function grLandRegistry(input: GrInput): { amount: number; min: number; m
   return { amount: Math.max(input.landRegistry ?? min, min), min, max };
 }
 
+/** Lawyer's fee before VAT: the entered amount, but never below 1% of the contract price. */
+export function grLawyerFee(input: GrInput): { amount: number; min: number } {
+  const min = Math.round(grPropertyPrice(input) * GR_RATES.lawyer.rate);
+  return { amount: Math.max(input.lawyerFee ?? min, min), min };
+}
+
 const line = (id: string, label: string, unit: number, qty: number, detail?: string, timeline?: string): LineItem => ({
   id,
   label,
@@ -93,30 +101,35 @@ function stage(id: string, title: string, subtotalLabel: string, short: string, 
   return { id, title, subtotalLabel, short, lines: kept, subtotal: kept.reduce((s, l) => s + l.total, 0) };
 }
 
+const BEFORE_SUBMISSION = "Before application submission";
+
 export function computeGrQuote(input: GrInput): Quote {
   const R = GR_RATES;
   const n = grFamilySize(input.family);
   const deps = n - 1;
   const price = grPropertyPrice(input);
-  const lawyer = Math.round(price * R.lawyer.rate);
+  const lawyer = grLawyerFee(input).amount;
   const lawyerVat = Math.round(lawyer * R.lawyer.vat);
 
   const stages = [
-    stage("purchase", "Property purchase fees", "Property Purchase Fees", "Property purchase", [
-      line("lawyer", "Lawyer's Fee (1%)", lawyer, 1),
+    stage("purchase", "Property purchase", "Property Purchase Total", "Property purchase", [
+      line("property", "Property (Contract Price)", price, 1, "Paid directly to the developer / seller"),
+      line("lawyer", "Lawyer's Fee (min. 1%)", lawyer, 1),
       line("lawyer-vat", "VAT on Lawyer's Fee (24%)", lawyerVat, 1),
       line("notary", "Public Notary Fee (1.5%)", Math.round(price * R.notaryRate), 1),
       line("land-registry", "Land Registry Fee (0.6–0.9%)", grLandRegistry(input).amount, 1, "Depends on area"),
       line("title-deed", "Title Deed Transfer Fee (3%)", Math.round(price * R.titleDeedRate), 1),
       line("retainer-signing", "TEG Professional Fee (Upon Signing)", input.retainerOnSigning, 1, undefined, "Upon signing"),
     ]),
-    stage("residency", "Permanent residency fees", "Total PR Fees", "Permanent residency", [
-      line("pr-main", "PR Application", R.prApplication.main, 1, "Main Applicant"),
-      line("pr-dep", "PR Application", R.prApplication.perDependant, deps, "Each dependant"),
-      line("gov-main", "Government Fee for PR Application", R.governmentFee.main, 1, "Main Applicant"),
-      line("gov-dep", "Government Fee for PR Application", R.governmentFee.perDependant, deps, "Each dependant"),
-      line("insurance", "Insurance (per year per person)", R.insurance, n, `${n} × person`),
-      line("misc", "Miscellaneous", R.miscellaneous, 1, "Accountant, courier, admin"),
+    stage("residency", "Residency application fee", "Residency Application Fee", "Residency application", [
+      line("pr-main", "PR Application", R.prApplication.main, 1, "Main Applicant", BEFORE_SUBMISSION),
+      line("pr-dep", "PR Application", R.prApplication.perDependant, deps, "Each dependant", BEFORE_SUBMISSION),
+      line("gov-main", "Government Fee for PR Application", R.governmentFee.main, 1, "Main Applicant", BEFORE_SUBMISSION),
+      line("gov-dep", "Government Fee for PR Application", R.governmentFee.perDependant, deps, "Each dependant", BEFORE_SUBMISSION),
+      line("insurance", "Insurance (per year per person)", R.insurance, n, `${n} × person`, BEFORE_SUBMISSION),
+      line("misc", "Miscellaneous", R.miscellaneous, 1, "Accountant, courier, admin", BEFORE_SUBMISSION),
+    ]),
+    stage("approval", "TEG professional fee (after approval)", "After Approval", "After approval", [
       line("retainer-approval", "TEG Professional Fee (After Approval)", input.retainerAfterApproval, 1, undefined, "After approval"),
     ]),
   ].filter((s) => s.lines.length > 0);
@@ -126,7 +139,8 @@ export function computeGrQuote(input: GrInput): Quote {
 
 export const GR_NOTES = [
   "All transactions will take place in EUR or AED, to be transferred to the company bank account in Dubai, UAE.",
-  "Investment to be made directly with the Developer/Seller and is not included in the total.",
+  "Investment to be made directly with the Developer/Seller.",
+  "Final cost may vary depending on the developer/property selected.",
   "The client is responsible for the exchange rate difference.",
   "All amounts mentioned are exclusive of VAT.",
   "This quotation is valid for 30 days from the date of quotation.",
