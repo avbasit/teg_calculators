@@ -287,7 +287,7 @@ export const CALCULATORS: CalculatorMeta[] = [
     country: "Portugal",
     shortName: "PT",
     region: "Europe",
-    tags: ["D2 Visa"],
+    tags: ["D2 Visa", "D7 Visa", "D8 Visa"],
     status: "live",
     blurb: "Right to live and work in Portugal with visa-free Schengen travel.",
   },
