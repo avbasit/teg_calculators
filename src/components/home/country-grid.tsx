@@ -15,6 +15,7 @@ import {
   SpainFlag,
   StpFlag,
   TurkiyeFlag,
+  UkFlag,
   VanuatuFlag,
 } from "@/components/flags";
 
@@ -28,6 +29,7 @@ const FLAGS: Record<string, React.ComponentType<{ className?: string }>> = {
   spain: SpainFlag,
   greece: GreeceFlag,
   turkiye: TurkiyeFlag,
+  "united-kingdom": UkFlag,
 };
 
 const ALL = "All";

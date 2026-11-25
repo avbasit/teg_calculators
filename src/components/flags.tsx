@@ -137,6 +137,24 @@ export function TurkiyeFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of the United Kingdom (Union Flag, simplified diagonals) at the tile's 3:2 ratio. */
+export function UkFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 40" className={className} role="img" aria-label="Flag of the United Kingdom">
+      <rect width="60" height="40" fill="#012169" />
+      <clipPath id="uk-flag-clip">
+        <rect width="60" height="40" />
+      </clipPath>
+      <g clipPath="url(#uk-flag-clip)">
+        <path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" strokeWidth="8" />
+        <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" strokeWidth="3" />
+        <path d="M30,0 V40 M0,20 H60" stroke="#fff" strokeWidth="12" />
+        <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" strokeWidth="7" />
+      </g>
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (

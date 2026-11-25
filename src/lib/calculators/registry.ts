@@ -339,8 +339,8 @@ export const CALCULATORS: CalculatorMeta[] = [
     country: "United Kingdom",
     shortName: "GB",
     region: "Europe",
-    tags: [],
-    status: "soon",
+    tags: ["Innovator Founder Visa"],
+    status: "live",
     blurb: "Access to a major financial centre and business hub.",
   },
   {
