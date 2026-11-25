@@ -96,7 +96,7 @@ export function GreeceCalculator() {
         )}
         <InfoBox id="gr-property">
           The property is paid <strong className="text-ink">directly to the developer / seller</strong> and is included in the
-          property purchase total (A). Notary (1.5%) and title deed transfer (3%) fees follow the contract price. The
+          property purchase total (A). Notary (1.5%) and title deed transfer (3.09%) fees follow the contract price. The
           lawyer&apos;s fee starts at the 1% minimum ({eur(lawyer.min)}) plus 24% VAT, and land registry at the 0.6% minimum
           ({eur(land.min)}, up to about {eur(land.max)} depending on area). Both can be raised in the Fees card.
         </InfoBox>

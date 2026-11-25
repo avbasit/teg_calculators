@@ -26,8 +26,8 @@ export const GR_RATES = {
   notaryRate: 0.015,
   /** B7 — land registry fee 0.6–0.9% depending on area; 0.6% is the automatic minimum */
   landRegistry: { minRate: 0.006, maxRate: 0.009 },
-  /** B8 — title deed transfer fee 3% */
-  titleDeedRate: 0.03,
+  /** B8 — title deed transfer fee 3.09% (sheet showed 3%; corrected rate) */
+  titleDeedRate: 0.0309,
   /** B12:B13 — PR application */
   prApplication: { main: 1000, perDependant: 500 },
   /** B14:B15 — government fee for PR application */
@@ -118,7 +118,7 @@ export function computeGrQuote(input: GrInput): Quote {
       line("lawyer-vat", "VAT on Lawyer's Fee (24%)", lawyerVat, 1),
       line("notary", "Public Notary Fee (1.5%)", Math.round(price * R.notaryRate), 1),
       line("land-registry", "Land Registry Fee (0.6–0.9%)", grLandRegistry(input).amount, 1, "Depends on area"),
-      line("title-deed", "Title Deed Transfer Fee (3%)", Math.round(price * R.titleDeedRate), 1),
+      line("title-deed", "Title Deed Transfer Fee (3.09%)", Math.round(price * R.titleDeedRate), 1),
       line("retainer-signing", "TEG Professional Fee (Upon Signing)", input.retainerOnSigning, 1, undefined, "Upon signing"),
     ]),
     stage("residency", "Residency application fee", "Residency Application Fee", "Residency application", [

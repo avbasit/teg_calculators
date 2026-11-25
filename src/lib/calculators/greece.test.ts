@@ -7,7 +7,7 @@ import { computeGrQuote, DEFAULT_GR_INPUT, grLandRegistry, grLawyerFee, type GrF
  */
 function sheet(b3: number, deps: number) {
   const e5 = 0.01 * b3 + 0.24 * (0.01 * b3);
-  const a = b3 + e5 + 0.015 * b3 + 0.006 * b3 + 0.03 * b3 + 5000;
+  const a = b3 + e5 + 0.015 * b3 + 0.006 * b3 + Math.round(0.0309 * b3) + 5000;
   const b = 1000 + 500 * deps + 2016 + 166 * deps + 150 * (1 + deps) + 2000;
   return { a, b, c: 5000, total: a + b + 5000 };
 }
@@ -15,10 +15,10 @@ function sheet(b3: number, deps: number) {
 const fam = (spouse: number, child: number, parent: number): GrFamily => ({ main: 1, spouse, child, parent });
 
 describe("Greece calculator", () => {
-  it("matches the sheet's saved sample (€250,000, main applicant + 3 dependants) plus the property price", () => {
+  it("matches the sheet sample (€250,000, main + 3 dependants) plus the property, with title deed at 3.09% (+€225)", () => {
     const q = computeGrQuote({ ...DEFAULT_GR_INPUT, family: fam(1, 2, 0) });
-    expect(q.stages.map((s) => s.subtotal)).toEqual([250000 + 20850, 12614 - 5000, 5000]);
-    expect(q.total).toBe(250000 + 33464);
+    expect(q.stages.map((s) => s.subtotal)).toEqual([250000 + 20850 + 225, 12614 - 5000, 5000]);
+    expect(q.total).toBe(250000 + 33464 + 225);
     expect(q.currency).toBe("EUR");
   });
 
@@ -62,6 +62,6 @@ describe("Greece calculator", () => {
 
   it("TEG professional fee is editable", () => {
     const q = computeGrQuote({ ...DEFAULT_GR_INPUT, retainerOnSigning: 2000, retainerAfterApproval: 0 });
-    expect(q.stages.map((s) => s.subtotal)).toEqual([250000 + 17850, 1000 + 2016 + 150 + 2000]);
+    expect(q.stages.map((s) => s.subtotal)).toEqual([250000 + 17850 + 225, 1000 + 2016 + 150 + 2000]);
   });
 });
