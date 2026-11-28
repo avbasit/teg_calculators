@@ -4,17 +4,25 @@ import { useMemo, useState } from "react";
 import {
   computeMtQuote,
   DEFAULT_MT_INPUT,
-  MT_ADULT_BANDS,
+  MT_ADULT_CHILD_AGE,
   MT_AGE_BANDS,
   MT_BEDROOMS,
+  MT_DEFAULT_ADULT_CHILD_AGE,
+  MT_DEFAULT_CHILD_AGE,
+  MT_DEFAULT_PARENT_AGE,
+  MT_LICENSE,
+  MT_MAX_ADULT_CHILDREN,
+  MT_MAX_AGE,
+  MT_MAX_CHILD_AGE,
   MT_MAX_CHILDREN,
+  MT_MAX_PARENTS,
   MT_NOTES,
   MT_RATES,
   MT_ROUTES,
-  mtConditions,
   mtFamilySize,
+  mtInfoSections,
+  mtInsuranceBand,
   mtPropertyAmount,
-  type MtAgeBand,
   type MtInput,
   type MtRoute,
 } from "@/lib/calculators/malta";
@@ -25,23 +33,99 @@ import { CalculatorPage, InfoBox, PersonCount, PlanDescription, StepCard } from 
 
 const eur = (n: number) => money(n, "EUR");
 
-function AgeBandSelect({ id, label, value, onChange }: { id: string; label: string; value: MtAgeBand; onChange: (v: MtAgeBand) => void }) {
+/** Age field for one family member, with the health insurance band it falls in. Below `min` is corrected on blur. */
+function AgeInput({
+  id,
+  label,
+  value,
+  min = 0,
+  max,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  min?: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  const band = mtInsuranceBand(value);
   return (
-    <label htmlFor={id} className="flex items-center gap-2 text-xs text-muted">
+    <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-xs text-muted">
       {label}
-      <select
+      <input
         id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value as MtAgeBand)}
-        className="h-9 rounded-lg bg-white px-2 text-sm font-semibold text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-royal/50"
-      >
-        {MT_ADULT_BANDS.map((b) => (
-          <option key={b.key} value={b.key}>
-            {b.label}
-          </option>
-        ))}
-      </select>
+        type="text"
+        inputMode="numeric"
+        value={String(value)}
+        onChange={(e) => {
+          const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 3);
+          onChange(Math.min(digits ? Number(digits) : 0, max));
+        }}
+        onBlur={() => value < min && onChange(min)}
+        className="h-9 w-16 rounded-lg bg-white px-2 text-center text-sm font-semibold text-ink tabular ring-1 ring-line outline-none focus:ring-2 focus:ring-royal/50"
+      />
+      <span>
+        years · insurance {band.label} <strong className="text-ink">{eur(band.rate)}</strong>/yr
+      </span>
     </label>
+  );
+}
+
+type AgeListKey = "childAges" | "adultChildAges" | "parentAges";
+
+/** A family group counted with a stepper, with one age field per member. */
+function MemberGroup({
+  label,
+  hint,
+  ages,
+  max,
+  defaultAge,
+  minAge,
+  maxAge,
+  idPrefix,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  ages: number[];
+  max: number;
+  defaultAge: number;
+  minAge?: number;
+  maxAge: number;
+  idPrefix: string;
+  onChange: (ages: number[]) => void;
+}) {
+  return (
+    <li className="py-3 last:pb-0">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-ink">{label}</p>
+          <p className="text-xs text-muted">{hint}</p>
+        </div>
+        <Stepper
+          label={label}
+          value={ages.length}
+          max={max}
+          onChange={(v) => onChange(v > ages.length ? [...ages, ...Array(v - ages.length).fill(defaultAge)] : ages.slice(0, v))}
+        />
+      </div>
+      {ages.length > 0 && (
+        <div className="mt-3 space-y-2 rounded-xl bg-canvas px-3 py-3">
+          {ages.map((age, i) => (
+            <AgeInput
+              key={i}
+              id={`${idPrefix}-${i + 1}`}
+              label={`${label} ${i + 1} age`}
+              value={age}
+              min={minAge}
+              max={maxAge}
+              onChange={(v) => onChange(ages.map((a, j) => (j === i ? v : a)))}
+            />
+          ))}
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -52,7 +136,8 @@ export function MaltaCalculator() {
   const route = MT_ROUTES[input.route];
   const rent = input.route === "rent";
   const amount = mtPropertyAmount(input);
-  const conditions = mtConditions(input);
+  const info = mtInfoSections(input);
+  const setAges = (k: AgeListKey) => (ages: number[]) => setInput((s) => ({ ...s, [k]: ages }));
   const set = <K extends keyof MtInput>(k: K, v: MtInput[K]) => setInput((s) => ({ ...s, [k]: v }));
   const min = rent ? MT_RATES.minRent : MT_RATES.minPurchase;
   const entered = rent ? input.rent : input.purchasePrice;
@@ -60,22 +145,24 @@ export function MaltaCalculator() {
   const family = [
     { label: "Main Applicant", count: 1 },
     { label: "Spouse", count: input.spouse },
-    { label: "Child under 18", count: input.children },
+    { label: "Child under 18", count: input.childAges.length },
+    { label: "Adult Child (18–28)", count: input.adultChildAges.length },
+    { label: "Parent / Parent-in-law", count: input.parentAges.length },
   ].filter((f) => f.count > 0);
 
   return (
     <CalculatorPage
       code="MT"
       title="Malta"
-      subtitle="Permanent Residence Programme (MPRP) · Payment schedule calculator"
+      subtitle={`Permanent Residence Programme (MPRP) · License No. ${MT_LICENSE} · Payment schedule calculator`}
       flag={<MaltaFlag className="h-14 w-[84px]" />}
       quote={quote}
       totalLabel="Total cost"
       caption={`${route.short} ${eur(amount)}${rent ? "/yr" : ""} · ${size} ${size === 1 ? "person" : "persons"}`}
       footnote="Figures follow the TEG Malta Residency Programme sheet. Amounts in EUR. Health insurance is approximate."
       notes={MT_NOTES}
-      info={conditions}
-      documentTitle="Payment Schedule — Malta Permanent Residence Programme"
+      info={info}
+      documentTitle={`Payment Schedule — Malta Permanent Residence Programme (License No. ${MT_LICENSE})`}
       planLabel={`MPRP — ${route.short} (${eur(amount)}${rent ? " per year" : ""})`}
       family={family}
       onReset={() => setInput(DEFAULT_MT_INPUT)}
@@ -115,9 +202,7 @@ export function MaltaCalculator() {
             </p>
           )}
           {rent && (
-            <p className="mt-2 text-xs text-muted">
-              Information only — rent is paid to the landlord and is not included in the total.
-            </p>
+            <p className="mt-2 text-xs text-muted">The first year&apos;s rent is included in section C (after approval).</p>
           )}
         </div>
         {rent && (
@@ -147,45 +232,75 @@ export function MaltaCalculator() {
           <li className="flex flex-wrap items-center justify-between gap-4 pb-3">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-ink">Main Applicant</p>
-              <AgeBandSelect id="mt-main-age" label="Age" value={input.mainAge} onChange={(v) => set("mainAge", v)} />
+              <AgeInput id="mt-main-age" label="Age" value={input.mainAge} max={MT_MAX_AGE} onChange={(v) => set("mainAge", v)} />
             </div>
             <Stepper label="Main Applicant" value={1} locked onChange={() => {}} />
           </li>
           <li className="flex flex-wrap items-center justify-between gap-4 py-3">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-ink">Spouse</p>
-              {input.spouse > 0 && <AgeBandSelect id="mt-spouse-age" label="Age" value={input.spouseAge} onChange={(v) => set("spouseAge", v)} />}
+              {input.spouse > 0 && <AgeInput id="mt-spouse-age" label="Age" value={input.spouseAge} max={MT_MAX_AGE} onChange={(v) => set("spouseAge", v)} />}
             </div>
             <Stepper label="Spouse" value={input.spouse} max={1} onChange={(v) => set("spouse", v as 0 | 1)} />
           </li>
-          <li className="flex items-center justify-between gap-4 pt-3">
-            <div>
-              <p className="text-sm font-semibold text-ink">Child under 18</p>
-              <p className="text-xs text-muted">Free — no charges by the Authority.</p>
-            </div>
-            <Stepper label="Child under 18" value={input.children} max={MT_MAX_CHILDREN} onChange={(v) => set("children", v)} />
-          </li>
+          <MemberGroup
+            label="Child"
+            hint="Under 18 · free — no charges by the Authority."
+            ages={input.childAges}
+            max={MT_MAX_CHILDREN}
+            defaultAge={MT_DEFAULT_CHILD_AGE}
+            maxAge={MT_MAX_CHILD_AGE}
+            idPrefix="mt-child-age"
+            onChange={setAges("childAges")}
+          />
+          <MemberGroup
+            label="Adult Child"
+            hint={`18–28, unmarried and financially dependent · ${eur(MT_RATES.adultChild)} each after approval.`}
+            ages={input.adultChildAges}
+            max={MT_MAX_ADULT_CHILDREN}
+            defaultAge={MT_DEFAULT_ADULT_CHILD_AGE}
+            minAge={MT_ADULT_CHILD_AGE.min}
+            maxAge={MT_ADULT_CHILD_AGE.max}
+            idPrefix="mt-adult-child-age"
+            onChange={setAges("adultChildAges")}
+          />
+          <MemberGroup
+            label="Parent"
+            hint={`Parents and parents-in-law, financially dependent · ${eur(MT_RATES.parent)} each after approval.`}
+            ages={input.parentAges}
+            max={MT_MAX_PARENTS}
+            defaultAge={MT_DEFAULT_PARENT_AGE}
+            maxAge={MT_MAX_AGE}
+            idPrefix="mt-parent-age"
+            onChange={setAges("parentAges")}
+          />
         </ul>
         <InfoBox id="mt-family">
-          Spouse and children under 18 add no government fees. Per person: residency card{" "}
-          <strong className="text-ink">{eur(MT_RATES.residencyCard)}</strong> (5 years) and approximate health insurance per
-          year — {MT_AGE_BANDS.map((b) => `${b.label} ${eur(b.rate)}`).join(", ")}. The final insurance amount will be quoted
-          by the Maltese insurance company.
+          Spouse and children under 18 add no government fees; parents and adult children add{" "}
+          <strong className="text-ink">{eur(MT_RATES.parent)}</strong> each. Per person: residency card{" "}
+          <strong className="text-ink">{eur(MT_RATES.residencyCard)}</strong> (5 years) and health insurance by each
+          member&apos;s age, approx. per year — {MT_AGE_BANDS.map((b) => `${b.label} ${eur(b.rate)}`).join(", ")}. The final
+          insurance amount will be quoted by the Maltese insurance company.
         </InfoBox>
       </StepCard>
 
-      <StepCard step={4} title={conditions.title}>
-        <ul className="space-y-2 text-sm text-muted">
-          {conditions.rows.map((r) => (
-            <li key={r.label} className="flex gap-2">
-              <span className="mt-2 size-1 shrink-0 rounded-full bg-royal" />
-              <span>
-                {r.label}
-                {r.value && <strong className="ml-1 text-ink">{r.value}</strong>}
-              </span>
-            </li>
+      <StepCard step={4} title="Conditions">
+        <div className="space-y-5">
+          {info.map((section) => (
+            <div key={section.title}>
+              <p className="mb-2 text-sm font-semibold text-ink">{section.title}</p>
+              {section.note && <p className="mb-2 text-xs text-muted">{section.note}</p>}
+              <ul className="space-y-2 text-sm text-muted">
+                {section.rows.map((r) => (
+                  <li key={r.label} className="flex gap-2">
+                    <span className="mt-2 size-1 shrink-0 rounded-full bg-royal" />
+                    {r.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </StepCard>
     </CalculatorPage>
   );

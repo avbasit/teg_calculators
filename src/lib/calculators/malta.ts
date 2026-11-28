@@ -2,7 +2,9 @@
  * Malta — Permanent Residence Programme (MPRP): property rental and property purchase routes.
  *
  * Ported from "Malta Residency Programme.xlsx" (Sheet1). Column D is the rental route, column F the purchase route.
- * The purchase price is part of the total (as on Greece); annual rent is shown for information only.
+ * The purchase price (own stage, as on Greece) and the annual rent (after approval) are both part of the total.
+ * Health insurance is priced per member from each member's age (I24:J28).
+ * Parents / parents-in-law and adult children (18–28) each add €7,500 after approval (D36:D37).
  */
 import type { InfoSection, LineItem, PaymentStage, Quote } from "./types";
 
@@ -13,7 +15,7 @@ export const MT_ROUTES: Record<MtRoute, { short: string; name: string; descripti
     short: "Renting of Property",
     name: "From €14,000 annual rent",
     description:
-      "Rent a residential property in Malta or Gozo from €14,000 a year, registered with the Malta Housing Authority and kept for at least five years. Rent is paid to the landlord and shown for information only — it is not part of the total.",
+      "Rent a residential property in Malta or Gozo from €14,000 a year, registered with the Malta Housing Authority and kept for at least five years. The first year's rent is included after approval.",
     conditions: [
       "The property must be located in Malta or Gozo.",
       "It must be a residential property suitable for the applicant and family.",
@@ -37,18 +39,55 @@ export const MT_ROUTES: Record<MtRoute, { short: string; name: string; descripti
   },
 };
 
-/** I24:J28 — health insurance per person per year (approximate). */
-export type MtAgeBand = "under18" | "18-25" | "26-50" | "50-70" | "70+";
-
-export const MT_AGE_BANDS: { key: MtAgeBand; label: string; rate: number }[] = [
-  { key: "under18", label: "Under 18", rate: 300 },
-  { key: "18-25", label: "18–25", rate: 525 },
-  { key: "26-50", label: "26–50", rate: 675 },
-  { key: "50-70", label: "50–70", rate: 2000 },
-  { key: "70+", label: "70+", rate: 2250 },
+/**
+ * I24:J28 — health insurance per person per year (approximate), by age.
+ * The sheet's bands touch at 50 and 70; those ages fall in the lower band (50 → 26–50, 70 → 50–70).
+ */
+export const MT_AGE_BANDS: { label: string; maxAge: number; rate: number }[] = [
+  { label: "Under 18", maxAge: 17, rate: 300 },
+  { label: "18–25", maxAge: 25, rate: 525 },
+  { label: "26–50", maxAge: 50, rate: 675 },
+  { label: "50–70", maxAge: 70, rate: 2000 },
+  { label: "70+", maxAge: Infinity, rate: 2250 },
 ];
 
-export const MT_ADULT_BANDS = MT_AGE_BANDS.filter((b) => b.key !== "under18");
+/** Health insurance band for an age. */
+export function mtInsuranceBand(age: number) {
+  return MT_AGE_BANDS.find((b) => age <= b.maxAge)!;
+}
+
+export const MT_MAX_AGE = 120;
+export const MT_MAX_CHILD_AGE = 17;
+export const MT_ADULT_CHILD_AGE = { min: 18, max: 28 };
+export const MT_DEFAULT_ADULT_AGE = 40;
+export const MT_DEFAULT_CHILD_AGE = 10;
+export const MT_DEFAULT_ADULT_CHILD_AGE = 20;
+export const MT_DEFAULT_PARENT_AGE = 65;
+/** Parents and parents-in-law. */
+export const MT_MAX_PARENTS = 4;
+export const MT_MAX_ADULT_CHILDREN = 10;
+
+/** A58:A62 — printed when parents are included. */
+export const MT_PARENT_CONDITIONS: InfoSection = {
+  title: "Conditions for including parents",
+  rows: [
+    "Parents must be principally financially dependent on the main applicant.",
+    "There is no minimum or maximum age requirement.",
+    "The main applicant must provide an affidavit confirming financial support.",
+    "Supporting evidence must demonstrate that the parents cannot maintain a self-sufficient basic independent life without the applicant's support.",
+  ].map((label) => ({ label, value: "" })),
+};
+
+/** A64:A68 — printed when adult children are included. */
+export const MT_ADULT_CHILD_CONDITIONS: InfoSection = {
+  title: "Conditions for adult children",
+  note: "The adult child must satisfy all three conditions.",
+  rows: [
+    "Must be over 18 but under 29 years old at the time of application.",
+    "Must be unmarried.",
+    "Must be principally financially dependent on the main applicant.",
+  ].map((label) => ({ label, value: "" })),
+};
 
 export const MT_RATES = {
   /** D6 — government administration fee: €15,000 with the application, the rest after approval */
@@ -56,6 +95,10 @@ export const MT_RATES = {
   /** D8 — after approval */
   contribution: 37000,
   /** D10 / D12 — spouse and children under 18 are free */
+  /** D36 — per parent (parents and parents-in-law), after approval */
+  parent: 7500,
+  /** D37 — per adult child aged 18–28, after approval */
+  adultChild: 7500,
   /** D14 — after approval */
   ngoDonation: 2000,
   /** D16 / F16 — minimum annual rent and minimum purchase price */
@@ -82,9 +125,12 @@ export const MT_BEDROOMS = [
 export interface MtInput {
   route: MtRoute;
   spouse: 0 | 1;
-  children: number;
-  mainAge: MtAgeBand;
-  spouseAge: MtAgeBand;
+  mainAge: number;
+  spouseAge: number;
+  /** One age per member — the number of members is the length of each list. */
+  childAges: number[];
+  adultChildAges: number[];
+  parentAges: number[];
   /** Annual rent / purchase price as entered; the quote never uses less than the route minimum. */
   rent: number;
   purchasePrice: number;
@@ -97,9 +143,11 @@ export interface MtInput {
 export const DEFAULT_MT_INPUT: MtInput = {
   route: "rent",
   spouse: 0,
-  children: 0,
-  mainAge: "26-50",
-  spouseAge: "26-50",
+  mainAge: MT_DEFAULT_ADULT_AGE,
+  spouseAge: MT_DEFAULT_ADULT_AGE,
+  childAges: [],
+  adultChildAges: [],
+  parentAges: [],
   rent: MT_RATES.minRent,
   purchasePrice: MT_RATES.minPurchase,
   legalAdvance: MT_RATES.legalAdmin.advance,
@@ -111,16 +159,14 @@ export const DEFAULT_MT_INPUT: MtInput = {
 export const MT_MAX_CHILDREN = 10;
 
 export function mtFamilySize(input: MtInput): number {
-  return 1 + input.spouse + input.children;
+  return 1 + input.spouse + input.childAges.length + input.adultChildAges.length + input.parentAges.length;
 }
 
-/** Annual rent (information only) or purchase price (in the total) for the selected route. */
+/** Annual rent or purchase price for the selected route. */
 export function mtPropertyAmount(input: MtInput): number {
   return input.route === "rent" ? Math.max(input.rent, MT_RATES.minRent) : Math.max(input.purchasePrice, MT_RATES.minPurchase);
 }
 
-const rateOf = (band: MtAgeBand) => MT_AGE_BANDS.find((b) => b.key === band)!.rate;
-const labelOf = (band: MtAgeBand) => MT_AGE_BANDS.find((b) => b.key === band)!.label;
 
 const line = (id: string, label: string, unit: number, qty: number, detail?: string, timeline?: string): LineItem => ({
   id,
@@ -145,6 +191,15 @@ export function computeMtQuote(input: MtInput): Quote {
   const SUBMISSION = "With submission of application";
   const APPROVAL = "After approval";
   const approx = "approx. · final amount quoted by Maltese insurer";
+  const insurance = [
+    { id: "insurance-main", who: "Main Applicant", age: input.mainAge },
+    ...(input.spouse ? [{ id: "insurance-spouse", who: "Spouse", age: input.spouseAge }] : []),
+    ...input.childAges.map((age, i) => ({ id: `insurance-child-${i + 1}`, who: `Child ${i + 1}`, age })),
+    ...input.adultChildAges.map((age, i) => ({ id: `insurance-adult-child-${i + 1}`, who: `Adult Child ${i + 1}`, age })),
+    ...input.parentAges.map((age, i) => ({ id: `insurance-parent-${i + 1}`, who: `Parent ${i + 1}`, age })),
+  ];
+  const parents = input.parentAges.length;
+  const adultChildren = input.adultChildAges.length;
 
   const stages = [
     stage("signing", "Upon signing", "Upon Signing", "Upon signing", [
@@ -157,11 +212,12 @@ export function computeMtQuote(input: MtInput): Quote {
     stage("approval", "After approval", "After Approval", "After approval", [
       line("admin-fee-balance", "Government Administration Fee (Balance)", R.adminFee.total - R.adminFee.onSubmission, 1, "Main Applicant", APPROVAL),
       line("contribution", "Government Contribution", R.contribution, 1, "Spouse and children under 18 free", APPROVAL),
+      line("parent", "Contribution — Parent", R.parent, parents, `${parents} × parent / parent-in-law`, APPROVAL),
+      line("adult-child", "Contribution — Adult Child (18–28)", R.adultChild, adultChildren, `${adultChildren} × adult child`, APPROVAL),
       line("ngo", "Donation to an NGO", R.ngoDonation, 1, undefined, APPROVAL),
       line("residency-card", "Residency Card", R.residencyCard, n, `${n} × applicant · valid 5 years`, APPROVAL),
-      line("insurance-main", "Health Insurance (per year)", rateOf(input.mainAge), 1, `Main Applicant, age ${labelOf(input.mainAge)} · ${approx}`, APPROVAL),
-      line("insurance-spouse", "Health Insurance (per year)", rateOf(input.spouseAge), input.spouse, `Spouse, age ${labelOf(input.spouseAge)} · ${approx}`, APPROVAL),
-      line("insurance-child", "Health Insurance (per year)", rateOf("under18"), input.children, `${input.children} × child under 18 · ${approx}`, APPROVAL),
+      ...insurance.map((m) => line(m.id, "Health Insurance (per year)", mtInsuranceBand(m.age).rate, 1, `${m.who}, age ${m.age} (${mtInsuranceBand(m.age).label}) · ${approx}`, APPROVAL)),
+      line("rent", "Annual Rent", rent ? mtPropertyAmount(input) : 0, 1, "Minimum €14,000 / year · kept for 5 years", APPROVAL),
       line("legal-approval", "Legal & Admin Fee (50% On Approval)", input.legalOnApproval, 1, undefined, APPROVAL),
       line("retainer-approval", "TEG Professional Fee (50% After Approval)", input.retainerAfterApproval, 1, undefined, APPROVAL),
     ]),
@@ -176,29 +232,36 @@ export function computeMtQuote(input: MtInput): Quote {
   return { currency: "EUR", stages, total: stages.reduce((s, st) => s + st.subtotal, 0), familySize: n };
 }
 
-/**
- * Key conditions for the selected route — shown on the page and printed before the notes.
- * On the rental route it also carries the annual rent, which is information only.
- */
+/** Key conditions for the selected route — shown on the page and printed before the notes. */
 export function mtConditions(input: MtInput): InfoSection {
   const route = MT_ROUTES[input.route];
-  const rent =
-    input.route === "rent"
-      ? [{ label: "Annual rent (paid to the landlord, not included in the total)", value: `€${mtPropertyAmount(input).toLocaleString("en-US")} per year` }]
-      : [];
   return {
     title: `Key conditions — ${route.short}`,
-    rows: [...rent, ...route.conditions.map((c) => ({ label: c, value: "" }))],
+    rows: route.conditions.map((c) => ({ label: c, value: "" })),
   };
 }
+
+/** Every information section for the quote: property conditions, plus parent / adult child conditions when included. */
+export function mtInfoSections(input: MtInput): InfoSection[] {
+  return [
+    mtConditions(input),
+    ...(input.parentAges.length ? [MT_PARENT_CONDITIONS] : []),
+    ...(input.adultChildAges.length ? [MT_ADULT_CHILD_CONDITIONS] : []),
+  ];
+}
+
+export const MT_LICENSE = "RES-IMMV";
 
 export const MT_NOTES = [
   "All transactions will take place in EUR or AED, to be transferred to the company bank account in Dubai, UAE.",
   "Government administration fee: €15,000 to be paid with submission of application, the rest after approval.",
   "TEG professional fee and legal & admin fee are paid 50% in advance and 50% on approval.",
   "Residency card and health insurance are paid after approval.",
-  "On the rental route, the annual rent is paid to the landlord and is shown for information only; it is not included in the total.",
+  "On the rental route, the first year's rent is included after approval; the property must be kept for at least five years.",
+  "Health insurance is priced per member by age (approx. per year: under 18 €300, 18–25 €525, 26–50 €675, 50–70 €2,000, 70+ €2,250).",
   "Spouse and children under 18 are free — no charges by the Authority.",
+  "Parents and parents-in-law: €7,500 per parent, to be paid after approval.",
+  "Adult children (18–28): €7,500 per child, to be paid after approval.",
   "Health insurance amounts are approximate; the final amount will be quoted by the Maltese insurance company.",
   "Clean police conduct is required.",
   "This is not a tax-related programme, so no taxes are associated with it.",

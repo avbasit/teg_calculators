@@ -144,7 +144,7 @@ export interface CalculatorPageProps {
    */
   tegFee: FeeField[];
   /** Information-only details, printed on the quote just before the notes (not part of the total). */
-  info?: InfoSection;
+  info?: InfoSection | InfoSection[];
   /** Other negotiable fees (legal, authorized agent…), shown in their own groups. */
   otherFees?: { title: string; fields: FeeField[] }[];
   /** Input cards, numbered from step 2 (step 1 is the client card). The fees card follows them. */

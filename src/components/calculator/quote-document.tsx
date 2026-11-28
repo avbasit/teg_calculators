@@ -26,7 +26,7 @@ export function QuoteDocument({
   family: { label: string; count: number }[];
   quote: Quote;
   notes: string[];
-  info?: InfoSection;
+  info?: InfoSection | InfoSection[];
   totalLabel: string;
 }) {
   const fmt = (n: number) => money(n, quote.currency);
@@ -111,8 +111,8 @@ export function QuoteDocument({
         <span className="tabular">{fmt(quote.total)}</span>
       </div>
 
-      {info && (
-        <section className="mt-6 break-inside-avoid">
+      {(Array.isArray(info) ? info : info ? [info] : []).map((info) => (
+        <section key={info.title} className="mt-6 break-inside-avoid">
           <p className="font-bold uppercase tracking-wider text-ink">{info.title}</p>
           <table className="mt-1.5 w-full border-collapse">
             <tbody>
@@ -134,7 +134,7 @@ export function QuoteDocument({
           </table>
           {info.note && <p className="mt-1.5 text-muted">{info.note}</p>}
         </section>
-      )}
+      ))}
 
       <section className="mt-6 break-inside-avoid">
         <p className="font-bold uppercase tracking-wider text-ink">Notes</p>
