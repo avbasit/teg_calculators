@@ -236,8 +236,8 @@ export const CALCULATORS: CalculatorMeta[] = [
     programme: "Permanent Residence Programme",
     shortName: "MT",
     region: "Europe",
-    tags: [],
-    status: "soon",
+    tags: ["Rental", "Purchase"],
+    status: "live",
     blurb: "Freedom of movement in the Schengen Area and access to EU legal and social systems.",
   },
   {

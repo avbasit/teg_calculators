@@ -10,6 +10,7 @@ import {
   CountryMonogram,
   GreeceFlag,
   LatviaFlag,
+  MaltaFlag,
   PortugalFlag,
   SknFlag,
   SpainFlag,
@@ -30,6 +31,7 @@ const FLAGS: Record<string, React.ComponentType<{ className?: string }>> = {
   greece: GreeceFlag,
   turkiye: TurkiyeFlag,
   "united-kingdom": UkFlag,
+  malta: MaltaFlag,
 };
 
 const ALL = "All";

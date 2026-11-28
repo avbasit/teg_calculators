@@ -155,6 +155,19 @@ export function UkFlag({ className }: { className?: string }) {
   );
 }
 
+/** Flag of Malta (simplified George Cross) — white and red halves, grey cross edged in red in the canton. */
+export function MaltaFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 750 500" className={className} role="img" aria-label="Flag of Malta">
+      <rect width="750" height="500" fill="#fff" />
+      <rect x="375" width="375" height="500" fill="#CF142B" />
+      <g transform="translate(95 95)" stroke="#CF142B" strokeWidth="5" fill="#A7A9AC">
+        <path d="M26,0 h28 v26 h26 v28 h-26 v26 h-28 v-26 h-26 v-28 h26 z" />
+      </g>
+    </svg>
+  );
+}
+
 /** Placeholder tile for countries without a flag asset yet. */
 export function CountryMonogram({ code, className }: { code: string; className?: string }) {
   return (

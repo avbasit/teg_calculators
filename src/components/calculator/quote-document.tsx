@@ -118,8 +118,16 @@ export function QuoteDocument({
             <tbody>
               {info.rows.map((r) => (
                 <tr key={r.label} className="border-b border-line">
-                  <td className="px-2 py-1.5 font-semibold">{r.label}</td>
-                  <td className="px-2 py-1.5 text-right text-muted">{r.value}</td>
+                  {r.value ? (
+                    <>
+                      <td className="px-2 py-1.5 font-semibold">{r.label}</td>
+                      <td className="px-2 py-1.5 text-right text-muted">{r.value}</td>
+                    </>
+                  ) : (
+                    <td className="px-2 py-1.5" colSpan={2}>
+                      {r.label}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
